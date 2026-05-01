@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-IBM Optim Archive API Demo Script - Auto Mode
-Runs through all demo steps automatically without user prompts
+IBM Optim Archive API Demo Script
+For sales demonstrations - showcases key API capabilities
 """
 
 import requests
@@ -18,6 +18,14 @@ class OptimAPIDemo:
     """Simple demo client for IBM Optim Archive API"""
     
     def __init__(self, base_url: str, access_token: str, account_id: Optional[str] = None):
+        """
+        Initialize the demo client
+        
+        Args:
+            base_url: API base URL (e.g., 'https://api.example.com')
+            access_token: Your API access token
+            account_id: Optional account ID for multi-tenant environments
+        """
         self.base_url = base_url.rstrip('/')
         self.headers = {
             'Authorization': f'Bearer {access_token}',
@@ -108,18 +116,15 @@ class OptimAPIDemo:
         response = requests.get(url, headers=self.headers, params=params, verify=False)
         
         if response.status_code == 200:
-            result = response.json()
-            runs = result.get('requestObj', {}).get('spark_runs', [])
+            runs = response.json()
             print(f"✅ Found {len(runs)} recent execution(s)\n")
             
             for i, run in enumerate(runs, 1):
                 status_emoji = "✅" if run.get('status') == 'FINISHED' else "⚠️"
-                duration_ms = run.get('duration_ms', 0)
-                duration_sec = duration_ms / 1000 if duration_ms else 0
                 print(f"{status_emoji} Run {i}:")
                 print(f"  • Status: {run.get('status', 'N/A')}")
                 print(f"  • Started: {run.get('start_time', 'N/A')}")
-                print(f"  • Duration: {duration_sec:.2f} seconds")
+                print(f"  • Duration: {run.get('duration_seconds', 'N/A')} seconds")
                 print(f"  • Spark App ID: {run.get('spark_app_id', 'N/A')}")
                 print()
             
@@ -129,48 +134,12 @@ class OptimAPIDemo:
             print(f"   {response.text}")
             return None
     
-    def demo_list_archives(self):
-        """Demo: List all archive files"""
-        self.print_section("4. LIST ARCHIVE FILES")
-        
-        url = f"{self.base_url}/v1/file/savedlist"
-        
-        print(f"📡 Calling: GET {url}\n")
-        
-        response = requests.get(url, headers=self.headers, verify=False)
-        
-        if response.status_code == 200:
-            result = response.json()
-            archives = result.get('requestObj', {}).get('resources', [])
-            total_count = result.get('requestObj', {}).get('total_count', 0)
-            
-            print(f"✅ Found {total_count} archive file(s)\n")
-            
-            if not archives:
-                print("⚠️  No archive files found. Archives are created when jobs complete successfully.")
-                return None
-            
-            # Display first 3 archives
-            for i, archive in enumerate(archives[:3], 1):
-                print(f"Archive {i}:")
-                print(f"  • ID: {archive.get('id', 'N/A')}")
-                print(f"  • Name: {archive.get('name', 'N/A')}")
-                print(f"  • Job ID: {archive.get('job_id', 'N/A')}")
-                print(f"  • Created: {archive.get('created_at', 'N/A')}")
-                print()
-            
-            return archives[0].get('id') if archives else None
-        else:
-            print(f"❌ Error: {response.status_code}")
-            print(f"   {response.text}")
-            return None
-    
-    def demo_archive_schemas(self, archive_id: str):
+    def demo_archive_schemas(self, job_id: str):
         """Demo: Browse archive schemas"""
-        self.print_section("5. BROWSE ARCHIVE SCHEMAS")
+        self.print_section("4. BROWSE ARCHIVE SCHEMAS")
         
         url = f"{self.base_url}/v1/file/schemas"
-        params = {'id': archive_id}
+        params = {'id': job_id}
         
         print(f"📡 Calling: GET {url}")
         print(f"   Parameters: {params}\n")
@@ -178,97 +147,33 @@ class OptimAPIDemo:
         response = requests.get(url, headers=self.headers, params=params, verify=False)
         
         if response.status_code == 200:
-            result = response.json()
-            
-            # Handle different response formats
-            if isinstance(result, dict):
-                # Response is wrapped in an object
-                schemas = result.get('schemas', [])
-            elif isinstance(result, list):
-                # Response is a direct list
-                schemas = result
-            else:
-                print(f"⚠️  Unexpected response format")
-                return None, None
-            
+            schemas = response.json()
             print(f"✅ Found {len(schemas)} schema(s)\n")
             
-            # Schemas might be objects or strings
             for schema in schemas:
-                if isinstance(schema, dict):
-                    schema_name = schema.get('name', 'N/A')
-                    tables = schema.get('tables', [])
-                    print(f"📁 Schema: {schema_name}")
-                    print(f"   Tables: {', '.join(tables[:5])}")
-                    if len(tables) > 5:
-                        print(f"   ... and {len(tables) - 5} more")
-                elif isinstance(schema, str):
-                    # Schema is just a string name, need to fetch tables separately
-                    print(f"📁 Schema: {schema}")
-                    print(f"   (Use table listing endpoint to see tables)")
+                schema_name = schema.get('name', 'N/A')
+                tables = schema.get('tables', [])
+                print(f"📁 Schema: {schema_name}")
+                print(f"   Tables: {', '.join(tables[:5])}")
+                if len(tables) > 5:
+                    print(f"   ... and {len(tables) - 5} more")
                 print()
             
-            # Return first schema for next demo
-            if schemas:
-                if isinstance(schemas[0], dict):
-                    schema_name = schemas[0].get('name')
-                    tables = schemas[0].get('tables', [])
-                    if tables:
-                        return schema_name, tables[0]
-                elif isinstance(schemas[0], str):
-                    # Just return the schema name, we'll need to list tables
-                    return schemas[0], None
-            
+            # Return first schema and table for next demo
+            if schemas and schemas[0].get('tables'):
+                return schemas[0].get('name'), schemas[0]['tables'][0]
             return None, None
         else:
             print(f"❌ Error: {response.status_code}")
             print(f"   {response.text}")
             return None, None
     
-    def demo_list_tables(self, archive_id: str, schema_name: str):
-        """Demo: List tables in a schema"""
-        self.print_section("6. LIST TABLES IN SCHEMA")
-        
-        url = f"{self.base_url}/v1/file/schemas/{schema_name}/tables"
-        params = {'id': archive_id}
-        
-        print(f"📡 Calling: GET {url}")
-        print(f"   Parameters: {params}\n")
-        
-        response = requests.get(url, headers=self.headers, params=params, verify=False)
-        
-        if response.status_code == 200:
-            tables = response.json()
-            print(f"✅ Found {len(tables)} table(s) in schema '{schema_name}'\n")
-            
-            for i, table in enumerate(tables[:10], 1):
-                if isinstance(table, dict):
-                    print(f"  {i}. {table.get('name', 'N/A')}")
-                else:
-                    print(f"  {i}. {table}")
-            
-            if len(tables) > 10:
-                print(f"  ... and {len(tables) - 10} more tables")
-            print()
-            
-            # Return first table name
-            if tables:
-                if isinstance(tables[0], dict):
-                    return tables[0].get('name')
-                else:
-                    return tables[0]
-            return None
-        else:
-            print(f"❌ Error: {response.status_code}")
-            print(f"   {response.text}")
-            return None
-    
-    def demo_table_details(self, archive_id: str, schema_name: str, table_name: str):
+    def demo_table_details(self, job_id: str, schema_name: str, table_name: str):
         """Demo: Get table metadata"""
-        self.print_section("6. GET TABLE METADATA")
+        self.print_section("5. GET TABLE METADATA")
         
         url = f"{self.base_url}/v1/file/schemas/{schema_name}/tables/{table_name}"
-        params = {'id': archive_id}
+        params = {'id': job_id}
         
         print(f"📡 Calling: GET {url}")
         print(f"   Parameters: {params}\n")
@@ -296,12 +201,12 @@ class OptimAPIDemo:
             print(f"   {response.text}")
             return None
     
-    def demo_table_data(self, archive_id: str, schema_name: str, table_name: str):
+    def demo_table_data(self, job_id: str, schema_name: str, table_name: str):
         """Demo: Sample archived data"""
-        self.print_section("8. SAMPLE ARCHIVED DATA")
+        self.print_section("6. SAMPLE ARCHIVED DATA")
         
         url = f"{self.base_url}/v1/file/schemas/{schema_name}/tables/{table_name}/data"
-        params = {'id': archive_id, 'limit': 3}
+        params = {'id': job_id, 'limit': 3}
         
         print(f"📡 Calling: GET {url}")
         print(f"   Parameters: {params}\n")
@@ -335,9 +240,9 @@ class OptimAPIDemo:
             return None
     
     def run_full_demo(self):
-        """Run complete demo workflow automatically"""
+        """Run complete demo workflow"""
         print("\n" + "="*60)
-        print("  IBM OPTIM ARCHIVE API - SALES DEMO (AUTO MODE)")
+        print("  IBM OPTIM ARCHIVE API - SALES DEMO")
         print("  Showcasing Key Capabilities")
         print("="*60)
         
@@ -347,47 +252,38 @@ class OptimAPIDemo:
             print("\n⚠️  No jobs found. Please create an archive job first.")
             return
         
+        input("\n👉 Press Enter to continue to job details...")
+        
         # 2. Get job details
         self.demo_job_details(job_id)
+        
+        input("\n👉 Press Enter to continue to execution history...")
         
         # 3. Get execution history
         self.demo_job_status(job_id)
         
-        # 4. List archive files
-        archive_id = self.demo_list_archives()
+        input("\n👉 Press Enter to continue to archive schemas...")
         
-        if not archive_id:
-            print("\n⚠️  No archive files found.")
-            print("💡 Archive files are created when jobs complete successfully.")
-            print("💡 Please run an archive job first, then try this demo again.")
-            return
-        
-        # 5. Browse schemas
-        schema_name, table_name = self.demo_archive_schemas(archive_id)
-        
-        if not schema_name:
-            print("\n⚠️  No schemas found in archive.")
-            return
-        
-        # 6. List tables if we don't have a table name yet
-        if not table_name:
-            table_name = self.demo_list_tables(archive_id, schema_name)
+        # 4. Browse schemas
+        schema_name, table_name = self.demo_archive_schemas(job_id)
         
         if schema_name and table_name:
-            # 7. Get table details
-            self.demo_table_details(archive_id, schema_name, table_name)
+            input("\n👉 Press Enter to continue to table metadata...")
             
-            # 8. Sample data
-            self.demo_table_data(archive_id, schema_name, table_name)
+            # 5. Get table details
+            self.demo_table_details(job_id, schema_name, table_name)
+            
+            input("\n👉 Press Enter to continue to data sample...")
+            
+            # 6. Sample data
+            self.demo_table_data(job_id, schema_name, table_name)
         
         self.print_section("DEMO COMPLETE")
         print("✅ Successfully demonstrated all key API capabilities:")
         print("   • Job listing and filtering")
         print("   • Detailed job configuration")
         print("   • Execution history tracking")
-        print("   • Archive file listing")
         print("   • Schema browsing")
-        print("   • Table listing")
         print("   • Table metadata access")
         print("   • Archived data sampling")
         print("\n💡 All data retrieved via REST API in JSON format")

@@ -23,6 +23,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+venv/
+env/
+ENV/
 
 # IDE
 .vscode/
@@ -35,8 +38,25 @@ wheels/
 .DS_Store
 Thumbs.db
 
-# SSH keys
+# SSH keys and certificates
 *.pem
 *.key
+*.crt
+*.p12
 
-# Made with Bob
+# Logs
+*.log
+
+# Data files (generated)
+bi_metrics.json
+dashboard/bi_metrics.json
+
+# Archives and compressed files
+*.zip
+*.tar.gz
+*.rar
+
+# Temporary files
+*.tmp
+*.bak
+*~

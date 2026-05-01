@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBM Optim Archive - Business Intelligence Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .refresh-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .chart-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .table-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow-x: auto;
+        }
+
+        .table-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .success-rate {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .success-rate.high {
+            background: #51cf66;
+            color: white;
+        }
+
+        .success-rate.medium {
+            background: #ffd43b;
+            color: #333;
+        }
+
+        .success-rate.low {
+            background: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 IBM Optim Archive - Business Intelligence Dashboard</h1>
+            <p>Real-time archival analytics and insights</p>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        </div>
+
+        <div id="loading" class="loading">Loading dashboard data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Summary Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">📋</div>
+                    <div class="value" id="total-jobs">0</div>
+                    <div class="label">Total Archive Jobs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">⚡</div>
+                    <div class="value" id="total-executions">0</div>
+                    <div class="label">Total Executions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">💾</div>
+                    <div class="value" id="total-archives">0</div>
+                    <div class="label">Archive Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">👥</div>
+                    <div class="value" id="unique-users">0</div>
+                    <div class="label">Business Units</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">✅</div>
+                    <div class="value" id="success-rate">0%</div>
+                    <div class="label">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">⏱️</div>
+                    <div class="value" id="avg-duration">0s</div>
+                    <div class="label">Avg Duration</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📅</div>
+                    <div class="value" id="oldest-archive">0d</div>
+                    <div class="label">Oldest Archive</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h2>📊 Jobs by Business Unit</h2>
+                    <div class="chart-container">
+                        <canvas id="jobsByUserChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h2>📈 Job Status Distribution</h2>
+                    <div class="chart-container">
+                        <canvas id="jobStatusChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h2>⚡ Executions by Business Unit</h2>
+                    <div class="chart-container">
+                        <canvas id="executionsByUserChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h2>💾 Archives by Business Unit</h2>
+                    <div class="chart-container">
+                        <canvas id="archivesByUserChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Units Table -->
+            <div class="table-card">
+                <h2>👥 Business Unit Details</h2>
+                <table id="business-units-table">
+                    <thead>
+                        <tr>
+                            <th>Business Unit / User</th>
+                            <th>Jobs</th>
+                            <th>Executions</th>
+                            <th>Archives</th>
+                            <th>Success Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="business-units-tbody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Archive Age Table -->
+            <div class="table-card" style="margin-top: 30px;">
+                <h2>📅 Archive Age Details</h2>
+                <table id="archive-age-table">
+                    <thead>
+                        <tr>
+                            <th>Archive Name</th>
+                            <th>Job Name</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+                            <th>Age (Days)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-age-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        let charts = {};
+
+        async function loadDashboard() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'none';
+
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                updateSummaryStats(data.summary);
+                updateCharts(data);
+                updateBusinessUnitsTable(data);
+                updateArchiveAgeTable(data);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('timestamp').textContent = 
+                    `Last updated: ${new Date(data.collection_timestamp).toLocaleString()}`;
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Error loading dashboard: ${error.message}`;
+            }
+        }
+
+        function updateSummaryStats(summary) {
+            document.getElementById('total-jobs').textContent = summary.total_jobs || 0;
+            document.getElementById('total-executions').textContent = summary.total_executions || 0;
+            document.getElementById('total-archives').textContent = summary.total_archives || 0;
+            document.getElementById('unique-users').textContent = summary.unique_users || 0;
+            document.getElementById('success-rate').textContent = (summary.success_rate || 0) + '%';
+            document.getElementById('avg-duration').textContent = (summary.avg_duration_seconds || 0) + 's';
+            document.getElementById('oldest-archive').textContent = (summary.oldest_archive_days || 0) + 'd';
+        }
+
+        function updateCharts(data) {
+            // Jobs by User Chart
+            const jobsByUser = data.jobs.by_user || {};
+            const userNames = Object.keys(jobsByUser);
+            const jobCounts = userNames.map(user => jobsByUser[user].length);
+
+            createOrUpdateChart('jobsByUserChart', {
+                type: 'bar',
+                data: {
+                    labels: userNames,
+                    datasets: [{
+                        label: 'Number of Jobs',
+                        data: jobCounts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Job Status Chart
+            const jobStatus = data.jobs.by_status || {};
+            createOrUpdateChart('jobStatusChart', {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(jobStatus),
+                    datasets: [{
+                        data: Object.values(jobStatus),
+                        backgroundColor: [
+                            'rgba(81, 207, 102, 0.8)',
+                            'rgba(255, 107, 107, 0.8)',
+                            'rgba(255, 212, 59, 0.8)',
+                            'rgba(102, 126, 234, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Executions by User Chart
+            const execByUser = data.executions.by_user || {};
+            const execUserNames = Object.keys(execByUser);
+            const execCounts = execUserNames.map(user => execByUser[user].runs || 0);
+
+            createOrUpdateChart('executionsByUserChart', {
+                type: 'bar',
+                data: {
+                    labels: execUserNames,
+                    datasets: [{
+                        label: 'Number of Executions',
+                        data: execCounts,
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgba(118, 75, 162, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Archives by User Chart
+            const archivesByUser = data.archives.by_user || {};
+            const archiveUserNames = Object.keys(archivesByUser);
+            const archiveCounts = archiveUserNames.map(user => archivesByUser[user].length);
+
+            createOrUpdateChart('archivesByUserChart', {
+                type: 'bar',
+                data: {
+                    labels: archiveUserNames,
+                    datasets: [{
+                        label: 'Number of Archives',
+                        data: archiveCounts,
+                        backgroundColor: 'rgba(81, 207, 102, 0.8)',
+                        borderColor: 'rgba(81, 207, 102, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createOrUpdateChart(canvasId, config) {
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            charts[canvasId] = new Chart(ctx, config);
+        }
+
+        async function updateBusinessUnitsTable(data) {
+            const response = await fetch('/api/business-units');
+            const businessUnits = await response.json();
+
+            const tbody = document.getElementById('business-units-tbody');
+            tbody.innerHTML = '';
+
+            businessUnits.forEach(unit => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = unit.name;
+                row.insertCell(1).textContent = unit.jobs;
+                row.insertCell(2).textContent = unit.executions;
+                row.insertCell(3).textContent = unit.archives;
+                
+                const successRate = unit.success_rate;
+                const rateClass = successRate >= 80 ? 'high' : successRate >= 50 ? 'medium' : 'low';
+                const rateCell = row.insertCell(4);
+                rateCell.innerHTML = `<span class="success-rate ${rateClass}">${successRate}%</span>`;
+            });
+        }
+
+        function updateArchiveAgeTable(data) {
+            const archives = data.archives.all_archives || [];
+            const tbody = document.getElementById('archive-age-tbody');
+            tbody.innerHTML = '';
+
+            if (archives.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 6;
+                cell.textContent = 'No archives found';
+                cell.style.textAlign = 'center';
+                cell.style.color = '#999';
+                return;
+            }
+
+            // Calculate age for each archive and sort by age (oldest first)
+            const archivesWithAge = archives.map(archive => {
+                const createdDate = new Date(archive.created_at);
+                const now = new Date();
+                const ageMs = now - createdDate;
+                const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
+                const ageHours = Math.floor((ageMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                
+                return {
+                    ...archive,
+                    createdDate: createdDate,
+                    ageDays: ageDays,
+                    ageHours: ageHours,
+                    ageDisplay: ageDays > 0 ? `${ageDays}d ${ageHours}h` : `${ageHours}h`
+                };
+            }).sort((a, b) => b.ageDays - a.ageDays); // Sort by age descending (oldest first)
+
+            archivesWithAge.forEach(archive => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = archive.name || 'N/A';
+                row.insertCell(1).textContent = archive.flow_name || 'N/A';
+                row.insertCell(2).textContent = archive.created_by_name || 'Unknown';
+                row.insertCell(3).textContent = archive.createdDate.toLocaleString();
+                
+                const ageCell = row.insertCell(4);
+                ageCell.textContent = archive.ageDisplay;
+                // Color code by age
+                if (archive.ageDays > 30) {
+                    ageCell.style.color = '#ff6b6b';
+                    ageCell.style.fontWeight = 'bold';
+                } else if (archive.ageDays > 7) {
+                    ageCell.style.color = '#ffd43b';
+                    ageCell.style.fontWeight = 'bold';
+                } else {
+                    ageCell.style.color = '#51cf66';
+                }
+                
+                const statusCell = row.insertCell(5);
+                statusCell.textContent = archive.status || 'UNKNOWN';
+                statusCell.style.fontWeight = 'bold';
+                if (archive.status === 'FINISHED') {
+                    statusCell.style.color = '#51cf66';
+                } else if (archive.status === 'FAILED') {
+                    statusCell.style.color = '#ff6b6b';
+                } else {
+                    statusCell.style.color = '#ffd43b';
+                }
+            });
+        }
+
+        async function refreshData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Refreshing...';
+            
+            await loadDashboard();
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 Refresh Data';
+        }
+
+        // Load dashboard on page load
+        window.addEventListener('load', loadDashboard);
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadDashboard, 300000);
+    </script>
+</body>
+</html>
