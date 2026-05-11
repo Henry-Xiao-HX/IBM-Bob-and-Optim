@@ -57,5 +57,3 @@ echo ""
 
 # Run the dashboard server
 python3 dashboard_server.py
-
-# Made with Bob

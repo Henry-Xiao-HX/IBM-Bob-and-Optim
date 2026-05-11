@@ -1,6 +1,19 @@
-# IBM Optim Archive API - Demo & Tools
+# IBM Optim Archive API Toolkit
 
-A comprehensive toolkit for working with IBM Optim Archive API, featuring demo scripts, authentication helpers, and a Business Intelligence dashboard for monitoring archival operations.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+A comprehensive, production-ready toolkit for working with IBM Optim Archive API. Features include automated authentication, interactive demos, and a real-time Business Intelligence dashboard for monitoring archival operations.
+
+## ✨ Features
+
+- 🔐 **Automated Authentication** - Token management with 23-hour caching
+- 🎯 **Interactive Demo Scripts** - Explore API capabilities step-by-step
+- 📊 **BI Dashboard** - Real-time monitoring and analytics
+- 🔧 **Reusable Components** - Import as library or use standalone
+- 📚 **Comprehensive Documentation** - API reference and setup guides
+- 🚀 **Production Ready** - Error handling, logging, and best practices
 
 ## 🚀 Quick Start
 
@@ -37,6 +50,20 @@ The demo will automatically:
 - ✅ Showcase all key API capabilities
 - ✅ Provide interactive walkthroughs
 
+## 🌐 Web UI Access
+
+Access the Optim Archive Web Interface:
+
+**URL:** https://host:7780/
+
+**Credentials:**
+```env
+OPTIM_USERNAME=your_username
+OPTIM_PASSWORD=your_password
+```
+
+> **Note:** Replace `host` with your actual Optim server hostname or IP address. Use your configured Optim credentials to log in.
+
 ## 📊 Business Intelligence Dashboard
 
 Monitor and analyze your archival operations with real-time insights:
@@ -54,7 +81,7 @@ Then open: **http://localhost:5000**
 - 📊 **Interactive Charts**: Visualize trends and distributions
 - 🔄 **Auto-refresh**: Real-time updates every 5 minutes
 
-**[📖 Dashboard Quick Start](docs/DASHBOARD_QUICKSTART.md)** | **[📚 Full Dashboard Docs](dashboard/README.md)**
+For detailed dashboard documentation, see the dashboard section below.
 
 ## 📁 Project Structure
 
@@ -68,10 +95,12 @@ Then open: **http://localhost:5000**
 ├── auth_helper.py                # Authentication & token management
 ├── quick_demo.sh                 # One-command demo launcher
 │
-├── docs/                         # Documentation
-│   ├── API_Analysis.md           # API endpoint reference
-│   ├── DEMO_SETUP.md             # Detailed setup guide
-│   └── DASHBOARD_QUICKSTART.md   # Dashboard quick start
+├── docs/
+│   └── API_REFERENCE.md          # Complete API endpoint reference
+│
+├── examples/                     # Usage examples
+│   ├── basic_authentication.py   # Authentication example
+│   └── list_archive_jobs.py      # List jobs example
 │
 └── dashboard/                    # BI Dashboard
     ├── dashboard_server.py       # Flask web server
@@ -105,14 +134,13 @@ python3 auth_helper.py
 - ✅ Auto-refresh when expired
 - ✅ Secure storage in `.token_cache.json`
 
-## 📚 Documentation
+## 📚 Documentation & Examples
 
-| Document | Description |
+| Resource | Description |
 |----------|-------------|
-| **[API Analysis](docs/API_Analysis.md)** | Complete API endpoint reference |
-| **[Demo Setup Guide](docs/DEMO_SETUP.md)** | Detailed setup instructions |
-| **[Dashboard Quick Start](docs/DASHBOARD_QUICKSTART.md)** | Get started with the BI dashboard |
-| **[Dashboard README](dashboard/README.md)** | Full dashboard documentation |
+| **[API Reference](docs/API_REFERENCE.md)** | Complete API endpoint documentation |
+| **[Code Examples](examples/)** | Practical usage examples |
+| **[Dashboard Guide](#-business-intelligence-dashboard)** | BI dashboard documentation (see above) |
 
 ## 🎯 Key Features
 
@@ -191,7 +219,20 @@ This is a demo/tool repository. Feel free to:
 
 ## 📄 License
 
-This project is provided as-is for demonstration and utility purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built for IBM Optim Archive API
+- Designed for enterprise archival management
+- Community contributions welcome
+
+## 📞 Support
+
+For issues, questions, or contributions:
+- 📝 [Open an issue](../../issues)
+- 💬 [Start a discussion](../../discussions)
+- 🔀 [Submit a pull request](../../pulls)
 
 ---
 

@@ -1,6 +1,9 @@
 # Environment and credentials
 .env
+.env.local
+.env.*.local
 .token_cache.json
+*.token
 
 # Python
 __pycache__/
@@ -20,12 +23,29 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+*.py,cover
+.hypothesis/
 
 # IDE
 .vscode/
@@ -33,30 +53,67 @@ ENV/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
 # SSH keys and certificates
 *.pem
 *.key
 *.crt
 *.p12
+*.pfx
 
 # Logs
 *.log
+logs/
+*.log.*
 
 # Data files (generated)
 bi_metrics.json
 dashboard/bi_metrics.json
+*.db
+*.sqlite
+*.sqlite3
 
 # Archives and compressed files
 *.zip
 *.tar.gz
 *.rar
+*.7z
+*.dmg
+*.iso
 
 # Temporary files
 *.tmp
 *.bak
 *~
+*.swp
+*.swo
+.cache/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Backup files
+*.backup
+*.old
