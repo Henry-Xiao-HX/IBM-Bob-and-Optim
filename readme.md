@@ -73,7 +73,7 @@ cd dashboard
 ./launch_dashboard.sh
 ```
 
-Then open: **http://localhost:5000**
+Then open: **http://localhost:5001**
 
 ### Dashboard Features
 - 📈 **Summary Metrics**: Jobs, executions, archives, success rates
