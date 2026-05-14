@@ -11,6 +11,7 @@ A comprehensive, production-ready toolkit for working with IBM Optim Archive API
 - 🔐 **Automated Authentication** - Token management with 23-hour caching
 - 🎯 **Interactive Demo Scripts** - Explore API capabilities step-by-step
 - 📊 **BI Dashboard** - Real-time monitoring and analytics
+- 🎲 **Test Data Management** - Synthetic test data generation for DevOps CI/CD
 - 🔧 **Reusable Components** - Import as library or use standalone
 - 📚 **Comprehensive Documentation** - API reference and setup guides
 - 🚀 **Production Ready** - Error handling, logging, and best practices
@@ -83,6 +84,54 @@ Then open: **http://localhost:5001**
 
 For detailed dashboard documentation, see the dashboard section below.
 
+## 🎲 Test Data Management (TDM)
+
+**NEW: Synthetic Test Data Generation for DevOps Teams**
+
+Generate privacy-compliant, production-like test data directly in your IDE using IBM BOB and Optim Archive APIs.
+
+```bash
+cd TDM
+python3 synthetic_testdata_demo.py
+```
+
+### Key Benefits
+
+- **🔍 Data Discovery** - Find production data structures without accessing sensitive data
+- **✂️ Data Subsetting** - Extract manageable samples for test environments
+- **🔒 Privacy Masking** - Automatic PII/PHI masking for compliance (GDPR, HIPAA)
+- **🎲 Synthetic Generation** - Create realistic test data with production patterns
+- **🧪 Pre-Commit Testing** - Validate code changes before committing
+- **🚀 CI/CD Ready** - Export to JSON, SQL, CSV for pipeline integration
+
+### Quick Demo
+
+```bash
+# Generate synthetic test data
+cd TDM
+python3 synthetic_testdata_demo.py
+
+# Test your application with synthetic data
+cd mock_app
+python3 app.py
+
+# Run pre-commit tests
+python3 test_app.py
+```
+
+### Use with IBM BOB
+
+IBM BOB can guide you through the entire workflow interactively:
+
+1. **Ask BOB**: "Help me test my code changes with synthetic data"
+2. **BOB will**:
+   - Check if you have test data (or generate it)
+   - Run your application with test data
+   - Execute automated tests
+   - Tell you if it's safe to commit
+
+See [`TDM/README.md`](TDM/README.md) for complete documentation.
+
 ## 📁 Project Structure
 
 ```
@@ -94,6 +143,14 @@ For detailed dashboard documentation, see the dashboard section below.
 ├── demo_optim_api.py             # Interactive API demo script
 ├── auth_helper.py                # Authentication & token management
 ├── quick_demo.sh                 # One-command demo launcher
+│
+├── TDM/                          # Test Data Management
+│   ├── README.md                 # TDM documentation
+│   ├── synthetic_testdata_demo.py # Synthetic data generator
+│   └── mock_app/                 # Example application with tests
+│       ├── app.py                # Sample credit risk app
+│       ├── test_app.py           # Pre-commit test suite
+│       └── credit_risk_mock_data.csv # Sample test data
 │
 ├── docs/
 │   └── API_REFERENCE.md          # Complete API endpoint reference

@@ -1,0 +1,3310 @@
+basePath: /optim
+consumes:
+  - application/json
+  - application/vnd+ibm.dataplatform-pipeline+json
+  - application/x-www-form-urlencoded
+host: localhost
+info:
+  description: |-
+    IBM Optim core functions and application management
+
+    ### Security
+    Every request must include the `Authorization` HTTP header with the value `Bearer [access_token]`.
+    Most API request optim-conn-profile in header to call for database. `optim-conn-profile: [Connection profile name]`
+
+    Schemes:
+    http
+    https
+  license:
+    name: (c) IBM. All rights reserved
+  title: IBM Optim TDM - Core API server
+  version: 1.1.0
+paths:
+  /v1/auth/logout:
+    post:
+      description: Logout the user.
+      operationId: createAuthLogout
+      parameters:
+        - in: formData
+          name: ClientID
+          type: string
+        - in: formData
+          name: RefreshToken
+          required: true
+          type: string
+      summary: Auth Logout
+      tags:
+        - Auth
+  /v1/auth/token:
+    post:
+      description: Create a auth token.
+      operationId: createAuthToken
+      parameters:
+        - in: formData
+          name: ClientID
+          type: string
+        - default: '"password"'
+          in: formData
+          name: GrantType
+          type: string
+        - in: formData
+          name: Password
+          required: true
+          type: string
+        - default: '"openid organization"'
+          in: formData
+          name: Scope
+          type: string
+        - in: formData
+          name: Username
+          required: true
+          type: string
+      summary: Create a auth token
+      tags:
+        - Auth
+  /v1/auth/token/refresh:
+    post:
+      description: Create a auth refresh token.
+      operationId: createAuthRefreshToken
+      parameters:
+        - in: formData
+          name: ClientID
+          type: string
+        - in: formData
+          name: RefreshToken
+          required: true
+          type: string
+      summary: Create a auth refresh token
+      tags:
+        - Auth
+  /v1/auth/userinfo:
+    get:
+      description: Retrieves user information for the authenticated user.
+      operationId: getAuthUserinfo
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+      summary: Retrieve user info
+      tags:
+        - Auth
+  /v1/config:
+    get:
+      description: Get product configurations from environment variables
+      operationId: getConfig
+      summary: Get product configurations from environment variables
+      tags:
+        - Config
+  /v1/connprofiles:
+    get:
+      description: Administrators can retrieve the list of all connection profiles in the system. Regular users will receive a list to which they have accessibility
+      operationId: getAllConnectionProfiles
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+      summary: Retrieve all connection profiles
+      tags:
+        - Connection
+        - Profile
+    post:
+      description: |-
+        Create a new connection profile for a database. Both SSL and non-SSL connections can be created.
+        Note:** SSL certificate, if provided, must be a **base64 encoded** string.
+
+
+
+        ## Database-Specific Required Fields
+        Supported database/connection type identifier values:** `db2, informix, localfs, mongodb, netezza, oracle, postgresql, snowflake, sqlserver, sybase, teradata`
+
+        ### 1. **IBM Db2, Microsoft SQL Server, Oracle, PostgreSQL, Netezza, Sybase**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `database` (string): Database name
+        `host` (string): Database host address
+        `port` (string): Database port number
+        `username` (string): Database username
+        `password` (string): Database password
+        `ssl` (string): SSL enabled flag - must be "true" or "false"
+        If `ssl` = "true", then `ssl_certificate` (string) is also required
+
+
+
+        ### 2. **Snowflake**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `account_name` (string): Snowflake account identifier
+        `warehouse` (string): Snowflake warehouse name
+        `database` (string): Database name
+        `host` (string): Snowflake host address
+        `username` (string): Username
+        `password` (string): Password
+
+        Note:** SSL certificate is NOT required even if SSL is enabled
+
+
+
+        ### 3. **MongoDB**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `database` (string): Database name
+        `host` (string): MongoDB host address
+        `port` (string): MongoDB port number
+        `username` (string): Username
+        `password` (string): Password
+        `auth_database` (string): Authentication database name
+        `ssl` (string): SSL enabled flag - must be "true" or "false"
+        If `ssl` = "true", then `ssl_certificate` (string) is also required
+
+
+
+        ### 4. **Teradata**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `authentication_method` (string): Authentication method
+        `host` (string): Teradata host address
+        `username` (string): Username
+        `password` (string): Password
+
+        Note:** SSL certificate is NOT required even if SSL is enabled
+
+
+
+        ### 5. **IBM Informix**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `server` (string): Informix server name
+        `host` (string): Host address
+        `port` (string): Port number
+        `username` (string): Username
+        `password` (string): Password
+        `ssl` (string): SSL enabled flag - must be "true" or "false"
+        If `ssl` = "true", then `ssl_certificate` (string) is also required
+
+
+
+        ### 6. **Local File System**
+        Required Fields:**
+        `type` (string): Database type identifier
+        `file_type` (string): Type of file system
+      operationId: createConnectionProfile
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: All required connection profile properties for creation
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Create a new connection profile
+      tags:
+        - Connection
+        - Profile
+  /v1/connprofiles/{name}:
+    delete:
+      description: |-
+        Deletes an existing connection profile by name.
+        Administrators can delete any profile in the system. Regular users can only delete profiles they own or have been granted access to.
+      operationId: deleteConnectionProfile
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The specific name of the connection profile which the session user wants to delete.
+          in: path
+          name: Name
+          required: true
+          type: string
+      summary: Delete existing connection profile
+      tags:
+        - Connection
+        - Profile
+    get:
+      description: |-
+        Retrieve the properties of a connection profile by name.
+        Administrators can retrieve properties of all profiles. Regular users can only retrieve profiles they own or have been granted access to.
+      operationId: getConnectionProfileByName
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The specific name of the connection profile which the session user wants to retrieve.
+          in: path
+          name: Name
+          required: true
+          type: string
+      summary: Retrieve the specific connection profile
+      tags:
+        - Connection
+        - Profile
+    put:
+      description: |-
+        Updates a specific connection profile by name.
+        Administrators can update any profile in the system. Regular users can only update profiles they own or have been granted access to.
+
+        See the **connectionProfile** model for full details on all properties.
+      operationId: updateConnectionProfile
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The connection profile properties
+          in: body
+          name: Body
+          required: true
+          schema: {}
+        - description: The specific name of the connection profile which the session user wants to update.
+          in: path
+          name: Name
+          required: true
+          type: string
+      summary: Update the specific connection profile
+      tags:
+        - Connection
+        - Profile
+  /v1/connprofiles/testConnection:
+    post:
+      description: Validates a given connection profile by attempting to connect to the database.
+      operationId: testConnection
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: |-
+            Connection profile details, including database type, host, port,
+            username, password, SSL configuration, etc.
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Check whether the database can be connected
+      tags:
+        - Connection
+        - Profile
+  /v1/database/schemas:
+    get:
+      description: |-
+        Retrieves schemas from database based on the provided connection profile.
+        By default, results are returned in alphabetical order by schema name.
+        Supports pagination, search, and filtering of system schemas.
+      operationId: listSchemas
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Sort order for schema names. Use 'true' for ascending and 'false' for descending.
+          in: query
+          name: IsAscend
+          type: string
+        - default: 25
+          description: Maximum number of schemas to return in the response.
+          format: int64
+          in: query
+          name: Limit
+          type: integer
+        - default: 0
+          description: Number of items to skip before starting to return results (for pagination).
+          format: int64
+          in: query
+          name: Offset
+          type: integer
+        - description: The connection profile name that identifies which database to query.
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Optional search term to filter schemas by name.
+          in: query
+          name: SearchName
+          type: string
+        - description: Whether to include system schemas in the results.
+          in: query
+          name: ShowSystems
+          type: string
+      summary: List schemas in the database
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}:
+    get:
+      description: |-
+        Retrieves detailed information about a specific schema in the connected database.
+        The schema is identified by its name, provided in the path parameter.
+      operationId: getSchema
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The connection profile name that identifies which database to query.
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: The name of the schema to retrieve.
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+      summary: Get schema details
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}/tables:
+    get:
+      description: |-
+        Retrieves all tables in the specified schema of the connected database.
+        The results are returned alphabetically by table name. Supports pagination, search filtering, and optional inclusion of system tables.
+      operationId: listSchemaTables
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: sort name in ascending order
+          in: query
+          name: IsAscend
+          type: string
+        - default: 25
+          description: The number of items to return
+          format: int64
+          in: query
+          name: Limit
+          type: integer
+        - default: 0
+          description: The number of items to skip before starting to collect the result set
+          format: int64
+          in: query
+          name: Offset
+          type: integer
+        - description: Connection profile name
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Schema name
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+        - description: name to match
+          in: query
+          name: SearchName
+          type: string
+        - description: Whether to show system objects.
+          in: query
+          name: ShowSystems
+          type: string
+      summary: Lists tables in a schema
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}/tables/{table_name}:
+    get:
+      description: |-
+        Retrieves detailed information about a specific table within a schema in the connected database.
+        The table is identified by its name in the path parameter.
+      operationId: getSchemaTable
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Connection profile name
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Schema name
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+        - description: Table name
+          in: path
+          name: TableName
+          required: true
+          type: string
+      summary: Returns information about a table
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}/tables/{table_name}/data:
+    get:
+      description: |-
+        Fetches data from a specific table, up to a maximum of 100,000 rows.
+        Currently, tables containing CLOB, BLOB, or DBCLOB columns cannot be retrieved.
+        Supports pagination using `offset` and `limit` query parameters.
+      operationId: getTableData
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - default: 100
+          description: The number of rows to return
+          format: int64
+          in: query
+          name: Limit
+          type: integer
+        - default: 0
+          description: The number of rows to skip before starting to collect the result set
+          format: int64
+          in: query
+          name: Offset
+          type: integer
+        - description: Connection profile name
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Schema name
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+        - description: Table name
+          in: path
+          name: TableName
+          required: true
+          type: string
+      summary: Get table data
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}/tables/{table_name}/dependencies:
+    get:
+      description: |-
+        Retrieves dependency information for a specific table, including ancestor tables it depends on and/or descendant tables that depend on it.
+        Results are returned in order from parent to child. Supports optional depth and direction parameters.
+      operationId: getTableDependencies
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - default: 10
+          description: The number of levels of dependencies to retrieve
+          format: int64
+          in: query
+          name: Depth
+          type: integer
+        - default: '"ancestors"'
+          description: direction to fetch ancestors, descendants or both
+          in: query
+          name: Direction
+          type: string
+        - description: Connection profile name
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Schema name
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+        - description: The start table name
+          in: path
+          name: TableName
+          required: true
+          type: string
+      summary: Get table dependencies
+      tags:
+        - Database
+        - Objects
+  /v1/database/schemas/{schema_name}/tables/{table_name}/primary_key:
+    get:
+      description: Return information about a table's primary key
+      operationId: getTablePrimaryKey
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Connection profile name
+          in: header
+          name: OptimConnProfile
+          required: true
+          type: string
+        - description: Schema name
+          in: path
+          name: SchemaName
+          required: true
+          type: string
+        - description: Table name
+          in: path
+          name: TableName
+          required: true
+          type: string
+      summary: Returns information about a table's primary key
+      tags:
+        - Database
+        - Objects
+  /v1/flow:
+    delete:
+      description: Delete flows using the IDs
+      operationId: deleteFlow
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Flow IDs to be delete
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Delete flows
+      tags:
+        - Flow
+    post:
+      description: |-
+        Creating a new flow using the `pipeline-flow-v3` object in JSON format, leveraging existing nodes and connection profiles in your system.
+
+        ### Prerequisites
+        Nodes must already exist in the system via the `/v1/node` endpoint. Connection profiles for source and/or target databases must already exist in the system.
+
+
+
+        ## Step 1: Create the Pipeline Skeleton
+
+        Begin by establishing the foundational structure of your flow. This skeleton serves as the container for all processing logic.
+
+        ```json
+
+        {
+        "id": "<Flow UUID>",
+        "version": "3.0",
+        "app_data": {
+        "optim": {
+        "version": "1.1.0"
+        }
+        },
+        "doc_type": "pipeline",
+        "parameters": {},
+        "json_schema": "https://api.dataplatform.ibm.com/schemas/common-pipeline/pipeline-flow/pipeline-flow-v3-schema.json",
+        "primary_pipeline": "<Primary Pipeline UUID>",
+        "pipelines": [
+        {
+        "id": "<Pipeline UUID>",
+        "name": "<Pipeline Name>",
+        "nodes": [
+        Nodes will be added here
+        ],
+        "app_data": {
+        "ui_data": {
+        "comments": [],
+        "flow_type": "<type>"
+        }
+        },
+        "runtime_ref": "optim-runtime:1.1.0"
+        }
+        ]
+        }
+
+        ```
+
+        Important Configuration Notes:**
+
+        Generate unique UUIDs for both the `id` and pipeline `id` fields.
+        Ensure the `primary_pipeline` matches the pipeline you intend to execute.
+        The `runtime_ref` specifies the execution environment version.
+
+
+
+        ## Step 2: Define Connection Nodes
+
+        Add connection nodes to reference source and target databases. These nodes link your pipeline to pre-configured connection profiles.
+
+        ```json
+
+        {
+        "op": "connection_profile",
+        "id": "<Connection Node UUID>",
+        "type": "binding",
+        "inputs": [],
+        "outputs": [],
+        "parameters": {
+        "connection_type": "<source|target>"
+        },
+        "connection": {
+        "ref": "<Connection UUID>",
+        "name": "<Connection Name>",
+        "properties": {}
+        }
+        }
+
+        ```
+
+        Connection Configuration Requirements:**
+
+        Connection profiles must already exist in your environment.
+        Ensure you have the UUID references for each connection.
+        Specify whether each connection is a `source` or `target`.
+
+
+
+        ## Step 3: Define Execution Nodes
+
+        Execution nodes perform the actual data operations in the pipeline. Each node is populated using existing node data from the system.
+
+        ```json
+
+        {
+        "op": "<access_definition|subset_definition|transform_definition|insert_definition>",
+        "type": "execution_node",
+        "id": "<Node UUID>",
+        "app_data": {}            // Populated from existing node in system
+        }
+
+        ```
+        ## Finalizing the Pipeline
+        Once all nodes are defined and added to the `nodes` array, the flow is ready for creation using the flow creation endpoint.
+      operationId: createFlow
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Flow, outer JSON of pipeline-flow-v3 object
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Create a new flow with existing nodes
+      tags:
+        - Flow
+    put:
+      description: Update a flow using the new pipeline JSON
+      operationId: updateFlow
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Flow, pipeline-flow-v3 object
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Update flow
+      tags:
+        - Flow
+  /v1/flow/{id}:
+    get:
+      description: |-
+        Get a flow by ID.
+        Administrators can retrieve the any flows in the system. Regular users will be able to retrieve flow they have created.
+      operationId: getSavedFlow
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The id of the flow to retrieve.
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Get a flow by ID
+      tags:
+        - Flow
+  /v1/flow/create-nodes:
+    post:
+      description: |-
+        Creating a new flow using the `pipeline-flow-v3` object in JSON format, leveraging existing connection profiles and creating new nodes as needed in your system.
+        If an existing node is referenced in the pipeline, the system will use the existing node stored in the system. The node is referenced by name and id. This endpoint will not edit/update an existing node.
+
+        ### Prerequisites
+        Connection profiles for source and/or target databases must already exist in the system.
+
+
+
+        ## Step 1: Create the Pipeline Skeleton
+
+        Begin by establishing the foundational structure of your flow. This skeleton serves as the container for all processing logic.
+
+        ```json
+
+        {
+        "id": "<Flow UUID>",
+        "version": "3.0",
+        "app_data": {
+        "optim": {
+        "version": "1.1.0"
+        }
+        },
+        "doc_type": "pipeline",
+        "parameters": {},
+        "json_schema": "https://api.dataplatform.ibm.com/schemas/common-pipeline/pipeline-flow/pipeline-flow-v3-schema.json",
+        "primary_pipeline": "<Primary Pipeline UUID>",
+        "pipelines": [
+        {
+        "id": "<Pipeline UUID>",
+        "name": "<Pipeline Name>",
+        "nodes": [
+        Nodes will be added here
+        ],
+        "app_data": {
+        "ui_data": {
+        "comments": [],
+        "flow_type": "<type>"
+        }
+        },
+        "runtime_ref": "optim-runtime:1.1.0"
+        }
+        ]
+        }
+
+        ```
+
+        Important Configuration Notes:**
+
+        Generate unique UUIDs for both the `id` and pipeline `id` fields.
+        Ensure the `primary_pipeline` matches the pipeline you intend to execute.
+        The `runtime_ref` specifies the execution environment version.
+
+
+
+        ## Step 2: Define Connection Nodes
+
+        Add connection nodes to reference source and target databases. These nodes link your pipeline to pre-configured connection profiles.
+
+        ```json
+
+        {
+        "op": "connection_profile",
+        "id": "<Connection Node UUID>",
+        "type": "binding",
+        "inputs": [],
+        "outputs": [],
+        "parameters": {
+        "connection_type": "<source|target>"
+        },
+        "connection": {
+        "ref": "<Connection UUID>",
+        "name": "<Connection Name>",
+        "properties": {}
+        }
+        }
+
+        ```
+
+        Connection Configuration Requirements:**
+
+        Connection profiles must already exist in your environment.
+        Ensure you have the UUID references for each connection.
+        Specify whether each connection is a `source` or `target`.
+
+
+
+        ## Step 3: Define Execution Nodes
+
+        Execution nodes perform the actual data operations in the pipeline. Each node is to be populated with data to be processed. Refer nodes section for more details.
+
+        ```json
+
+        {
+        "op": "<access_definition|subset_definition|transform_definition|insert_definition>",
+        "type": "execution_node",
+        "id": "<Node UUID>",
+        "app_data": {
+        Node data to be included here.
+        }
+        }
+
+        ```
+        ## Finalizing the Pipeline
+        Once all nodes are defined and added to the `nodes` array, the flow is ready for creation using the flow creation endpoint.
+      operationId: createFlowWithNodes
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Flow, outer JSON of pipeline-flow-v3 object
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Create a new flow and create each included node.
+      tags:
+        - Flow
+  /v1/flow/preview/{id}:
+    get:
+      description: Get a preview of rows on subsetting and masking nodes
+      operationId: getFlowPreview
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Flow ID
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Display sample rows
+      tags:
+        - Flow
+  /v1/flow/savedlist:
+    get:
+      description: |-
+        List all saved flows.
+        Administrators can retrieve the list of all flows in the system. Regular users will receive a list flows they have created.
+      operationId: listSavedFlows
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Source connenction name to match
+          in: query
+          name: SrcConnName
+          type: string
+        - description: Type name to match
+          in: query
+          name: WorksheetType
+          type: string
+      summary: List saved flows
+      tags:
+        - Flow
+  /v1/flow/submit/{id}:
+    post:
+      description: |-
+        Submits the specified flow by ID to the runtime environment for execution. Ensure the flow has been created and saved before submission.
+        Once submitted, the flow will be processed according to its defined pipelines and logic. Also, a copy of the submitted flow is preserved in the metadata.
+      operationId: submitFlow
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: UUID of the flow to submit for execution.
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Submit a flow for execution
+      tags:
+        - Flow
+  /v1/job:
+    delete:
+      description: |-
+        Delete a job or list of jobs by ID.
+        Administrators can delete any job in the system. Regular users can only delete jobs they own or have been granted access to.
+      operationId: deleteJobs
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Job IDs to be delete
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Delete job
+      tags:
+        - Job
+  /v1/job/details/{id}:
+    get:
+      description: Get the details of a specific job.
+      operationId: getSavedJobDetails
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The id of the job to retrieve.
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Get saved job details
+      tags:
+        - Job
+  /v1/job/preview/{id}:
+    get:
+      description: Get a preview of rows on subsetting and masking inputs.
+      operationId: getRowPreview
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The id of the job to retrieve.
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Display sample rows
+      tags:
+        - Job
+  /v1/job/savedlist:
+    get:
+      description: |-
+        List all saved jobs.
+        Administrators can retrieve the list of all jobs in the system. Regular users will receive a list to which they have accessibility
+      operationId: listSavedJobs
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Source connenction name to match
+          in: query
+          name: SrcConnName
+          type: string
+        - description: Type name to match
+          in: query
+          name: WorksheetType
+          type: string
+      summary: List saved jobs
+      tags:
+        - Job
+  /v1/job/spark/{id}:
+    get:
+      description: Retreive spark status for a given submission ID.
+      operationId: getSparkStatus
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Job submission id
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Get spark status
+      tags:
+        - Job
+  /v1/job/spark/status/{id}:
+    get:
+      description: Retreive and update run statuses for the provided job ID.
+      operationId: getSparkRunStatus
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: The job id to get run statuses for.
+          in: path
+          name: ID
+          required: true
+          type: string
+        - default: 25
+          description: Number of prior runs to retrieve and update
+          format: int64
+          in: query
+          name: Limit
+          type: integer
+      summary: Get run statuses for a job
+      tags:
+        - Job
+  /v1/job/spark/submission/kill/{id}:
+    post:
+      description: Spark submission can be killed using driver ID
+      operationId: killSubmission
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Spark submission ID
+          in: path
+          name: ID
+          required: true
+          type: string
+      summary: Kill a Spark submission
+      tags:
+        - Job
+  /v1/masking/categories:
+    get:
+      description: Retrieve the available masking types and formats.
+      operationId: getMaskingCategories
+      parameters:
+        - description: Access credentials in the form of a JWT token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+      summary: Get available masking types and formats
+      tags:
+        - Masking
+  /v1/masking/types:
+    get:
+      description: Retrieve the available masking types and formats.
+      operationId: getMaskingTypes
+      parameters:
+        - description: Access credentials in the form of a JWT token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+      summary: Get available masking types and formats
+      tags:
+        - Masking
+  /v1/node/{node_type}:
+    post:
+      description: |-
+        Create a new node of the specified type.
+
+        The node_type parameter determines the type of node to create:
+        subset: Creates a subset node
+        insert: Creates an insert node
+        transform: Creates a transform node
+        relationship: Creates a relationship node
+
+        Skeleton payload for each node type:
+
+        <b>Subset definition node: </b>
+        ```json
+        {
+        "op": "subset_definition",
+        "type": "execution_node",
+        "id": "<Subset Definition Node UUID>",
+        "app_data": {
+        "subset_tables": [
+        {
+        "schema": "<SCHEMA_NAME>",
+        "database": "<DATABASE_NAME>",
+        "table_name": "<TABLE_NAME>",
+        "source_table_id": "<Source Table UUID>",
+        "subset_parameters": [
+        {
+        "type": "where_clause",
+        "structured_conditions": {
+        "condition": "<CONDITION>",
+        "clauses": [
+        {
+        "value": "<FILTER_VALUE>",
+        "operator": "<CONDITION_OPERATOR>",
+        "table_name": "<TABLE_NAME>",
+        "column_name": "<COLUMN_NAME>",
+        "schema_name": "<SCHEMA_NAME>",
+        "table_alias": "<TABLE_ALIAS>"
+        }
+        ]
+        }
+        }
+        ]
+        }
+        ]
+        }
+        }
+        ```
+
+        <b>Transform definition node: </b>
+        ```json
+        {
+        "op": "transform_definition",
+        "id": "<Transform Definition Node UUID>",
+        "type": "execution_node",
+        "app_data": {
+        "mask_tables": [
+        {
+        "schema": "<SCHEMA_NAME>",
+        "database": "<DATABASE_NAME>",
+        "table_name": "<TABLE_NAME>",
+        "source_table_id": "<Source Table UUID>",
+        "columns": [
+        {
+        "column_name_source": "<SOURCE_COLUMN_NAME>",
+        "column_name_target": "<TARGET_COLUMN_NAME>",
+        "masking_properties": {
+        "magen_function": {
+        "name": "<POLICY_TYPE>",
+        "type": "<MASKING_METHOD>",
+        "config": {}
+        },
+        "masking_definition_id": "<MASKING_DEFINITION_UUID>"
+        }
+        }
+        ]
+        }
+        ]
+        }
+        }
+        ```
+
+        Available Masking Methods:**
+         Method | Description |
+        --------|-------------|
+         FormatPreservingRedactionProcessor | Replaces value with a constant and validates the input format |
+         RedactProcessor | Replaces value with a constant; does not validate input format |
+         RandomFormatFabricationProcessor | Generates random value in same format; not repeatable |
+         RepeatableFormatFabricationProcessor | Generates repeatable value in same format |
+         FormatPreservingTokenizationProcessor | Replaces value with unique token; repeatable and format-valid |
+         RandomNoiseProcessor | Adds noise based on domain size; non-repeatable |
+         RepeatableNoiseProcessor | Adds repeatable noise based on domain size |
+
+        <b>Insert definition node:</b>
+        ```json
+        {
+        "op": "insert_definition",
+        "type": "execution_node",
+        "id": "<Insert Definition Node UUID>",
+        "app_data": {
+        "table_map": [
+        {   "id": "<Table Map UUID>"
+        "source": {
+        "source_table_id": "<Source Table UUID>",
+        "connection_profile": "<Source Connection UUID>",
+        "table_name": "<SOURCE_TABLE>",
+        "schema": "<SOURCE_SCHEMA>",
+        "database": "<SOURCE_DATABASE>",
+        },
+        "target": {
+        "schema": "<TARGET_SCHEMA>",
+        "table": "<TARGET_TABLE>",
+        "database": "<TARGET_DATABASE>",
+        "connection_profile": "<Target Connection UUID>"
+        }
+        }
+        ]
+        },
+        "insert_parameters": {
+        "relational_integrity": {
+        "conflict_resolution": "<CONFLICT_RESOLUTION_OPTION>"
+        }
+        }
+        }
+        ```
+
+        Conflict Resolution Options:**
+
+        `merge`: Insert new records, update existing.
+
+        `append`: Insert new records only; skip existing.
+
+        `update`: Update existing records only; skip new.
+
+        <b>Relationship definition node: </b>
+        ```json
+        {
+        "id": "<Relationship Definition Node UUID>",
+        "type": "execution_node",
+        "op": "relationship_definition",
+        "app_data": {
+        "relationships": [
+        {
+        "id": "<Relationship UUID>",
+        "parent_table_id": "<Parent Table UUID>",
+        "child_table_id": "<Child Table UUID>",
+        "relationship_conditions": [
+        {
+        "parent_conditions": {
+        "column_name": "<Parent Column Name>"
+        },
+        "child_conditions": {
+        "column_name": "<Child Column Name>"
+        }
+        }
+        ]
+        }
+        ]
+        }
+        }
+        ```
+      operationId: createNode
+      parameters:
+        - description: Access credentials in the form of a jwt token.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: ID of the access definition to associate the node with
+          format: uuid
+          in: header
+          name: AccessDefinitionID
+          required: true
+          type: string
+        - description: Node definition
+          in: body
+          name: Body
+          required: true
+          schema: {}
+        - description: Type of Node (subset, transform, relationship, insert)
+          in: path
+          name: NodeType
+          required: true
+          type: string
+      summary: Create a new node
+      tags:
+        - Node
+  /v1/node/{node_type}/{node_id}:
+    delete:
+      description: |-
+        Delete a specific Node by its ID.
+
+        The node_type parameter determines the type of node to delete:
+        subset: Deletes a subset node with filtering criteria
+        insert: Deletes an insert node with target table and column mappings
+        transform: Deletes a transform node with transformation rules
+        relationship: Deletes a relationship node with entity relationships
+        access: Deletes an access node
+      operationId: deleteNode
+      parameters:
+        - description: Access credentials in the form of a jwt token.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: UUID of the flow
+          in: query
+          name: FlowID
+          type: string
+        - description: UUID of the node
+          in: path
+          name: NodeID
+          required: true
+          type: string
+        - description: Type of Node (subset, transform, relationship, insert, access)
+          in: path
+          name: NodeType
+          required: true
+          type: string
+      summary: Delete Node by ID
+      tags:
+        - Node
+    get:
+      description: |-
+        Retrieve a specific Node by its ID.
+
+        The node_type parameter determines the type of node to retrieve:
+        subset: Retrieves a subset node with filtering criteria
+        insert: Retrieves an insert node with target table and column mappings
+        transform: Retrieves a transform node with transformation rules
+        relationship: Retrieves a relationship node with entity relationships
+        access : Retrieves an access node
+      operationId: getNode
+      parameters:
+        - description: Access credentials in the form of a jwt token.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: UUID of the node
+          in: path
+          name: NodeID
+          required: true
+          type: string
+        - description: Type of Node (subset, transform, relationship, insert, access)
+          in: path
+          name: NodeType
+          required: true
+          type: string
+      summary: Get Node by ID
+      tags:
+        - Node
+  /v1/node/{node_type}/list:
+    get:
+      description: Retrieve all nodes associated with a specific node type.
+      operationId: listNodesByType
+      parameters:
+        - description: Access credentials in the form of a jwt token. This is the preferred method of supplying access credentials.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: account id
+          in: header
+          name: AccountID
+          type: string
+        - description: Node Type
+          in: path
+          name: NodeType
+          required: true
+          type: string
+      summary: List Nodes by Type
+      tags:
+        - Node
+  /v1/node/access:
+    post:
+      description: |-
+        Create new access definition node.
+        Skeleton for request body:
+        ```json
+
+        {
+        "op": "access_definition",
+        "type": "execution_node",
+        "id": "<Access Definition Node UUID>",
+        "app_data": {
+        "source_tables": [
+        {
+        "connection_profile": "<Source Connection UUID>",
+        "database": "<DATABASE_NAME>",
+        "id": "<Source Table UUID>",
+        "schema": "SCHEMA_NAME",
+        "table_name": "TABLE_NAME"
+        }
+        ]
+        }
+        }
+
+        ```
+      operationId: createAccessNode
+      parameters:
+        - description: Access credentials in the form of a jwt token.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: Node definition
+          in: body
+          name: Body
+          required: true
+          schema: {}
+      summary: Create new access definition node
+      tags:
+        - Node
+  /v1/node/access/{access_definition_id}/related-nodes:
+    get:
+      description: |-
+        Retrieve all nodes associated with a specific access definition ID.
+
+        This endpoint returns all related nodes grouped by their node type:
+        subset_definition: Subset nodes belonging to an access defintion
+        insert_definition: Insert nodes  belonging to an access defintion
+        transform_definition: Transform  belonging to an access defintion
+        relationship_definition: Relationship  belonging to an access defintion
+      operationId: listNodes
+      parameters:
+        - description: Access credentials in the form of a jwt token.
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: UUID of the access definition
+          in: path
+          name: AccessDefinitionID
+          required: true
+          type: string
+      summary: List Nodes by Access Definition ID
+      tags:
+        - Node
+  /v1/status/livez:
+    get:
+      description: Provides a heartbeat endpoint to check if the server is running and can respond to requests
+      operationId: getLivez
+      summary: Check API server liveness
+      tags:
+        - Status
+  /v1/status/readyz:
+    get:
+      description: Provides an endpoint to check if the server can connect to the metadb postgresql instance
+      operationId: getReadyz
+      summary: Check API server readiness
+      tags:
+        - Status
+produces:
+  - application/json
+responses:
+  createAccessNodeBadRequest:
+    description: CreateAccessNodeBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeConflict:
+    description: CreateAccessNodeConflict Conflict
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeCreated:
+    description: CreateAccessNodeCreated Node created successfully
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeDefault:
+    description: CreateAccessNodeDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createAccessNodeForbidden:
+    description: CreateAccessNodeForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeInternalServerError:
+    description: CreateAccessNodeInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeNotFound:
+    description: CreateAccessNodeNotFound Access definition not found
+    headers:
+      body:
+        description: "In: Body"
+  createAccessNodeUnauthorized:
+    description: CreateAccessNodeUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createAuthLogoutBadRequest:
+    description: CreateAuthLogoutBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  createAuthLogoutDefault:
+    description: CreateAuthLogoutDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createAuthLogoutInternalServerError:
+    description: CreateAuthLogoutInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createAuthLogoutNoContent:
+    description: CreateAuthLogoutNoContent Successfully logged out. No content returned.
+  createAuthLogoutUnauthorized:
+    description: CreateAuthLogoutUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createAuthRefreshTokenBadRequest:
+    description: CreateAuthRefreshTokenBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  createAuthRefreshTokenDefault:
+    description: CreateAuthRefreshTokenDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createAuthRefreshTokenInternalServerError:
+    description: CreateAuthRefreshTokenInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createAuthRefreshTokenOK:
+    description: CreateAuthRefreshTokenOK Auth refresh token created
+    headers:
+      body:
+        description: "In: Body"
+  createAuthRefreshTokenUnauthorized:
+    description: CreateAuthRefreshTokenUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createAuthTokenBadRequest:
+    description: CreateAuthTokenBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createAuthTokenCreated:
+    description: CreateAuthTokenCreated Auth Token created
+    headers:
+      body:
+        description: "In: Body"
+  createAuthTokenDefault:
+    description: CreateAuthTokenDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createAuthTokenForbidden:
+    description: CreateAuthTokenForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createAuthTokenInternalServerError:
+    description: CreateAuthTokenInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createAuthTokenUnauthorized:
+    description: CreateAuthTokenUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileBadRequest:
+    description: CreateConnectionProfileBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileConflict:
+    description: CreateConnectionProfileConflict Connection profile already existed
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileCreated:
+    description: CreateConnectionProfileCreated Connection profile created
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileDefault:
+    description: CreateConnectionProfileDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createConnectionProfileForbidden:
+    description: CreateConnectionProfileForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileInternalServerError:
+    description: CreateConnectionProfileInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createConnectionProfileUnauthorized:
+    description: CreateConnectionProfileUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createFlowBadRequest:
+    description: CreateFlowBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createFlowConflict:
+    description: CreateFlowConflict Flow name/id already exists
+    headers:
+      body:
+        description: "In: Body"
+  createFlowCreated:
+    description: CreateFlowCreated Flow created.
+    headers:
+      body:
+        description: "In: Body"
+  createFlowDefault:
+    description: CreateFlowDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createFlowForbidden:
+    description: CreateFlowForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createFlowInternalServerError:
+    description: CreateFlowInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createFlowNotFound:
+    description: CreateFlowNotFound Not Found
+    headers:
+      body:
+        description: "In: Body"
+  createFlowUnauthorized:
+    description: CreateFlowUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesBadRequest:
+    description: CreateFlowWithNodesBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesConflict:
+    description: CreateFlowWithNodesConflict Flow name/id already exists
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesCreated:
+    description: CreateFlowWithNodesCreated Flow created.
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesDefault:
+    description: CreateFlowWithNodesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createFlowWithNodesForbidden:
+    description: CreateFlowWithNodesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesInternalServerError:
+    description: CreateFlowWithNodesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesNotFound:
+    description: CreateFlowWithNodesNotFound Not Found
+    headers:
+      body:
+        description: "In: Body"
+  createFlowWithNodesUnauthorized:
+    description: CreateFlowWithNodesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  createNodeBadRequest:
+    description: CreateNodeBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  createNodeConflict:
+    description: CreateNodeConflict Conflict
+    headers:
+      body:
+        description: "In: Body"
+  createNodeCreated:
+    description: CreateNodeCreated Node created successfully
+    headers:
+      body:
+        description: "In: Body"
+  createNodeDefault:
+    description: CreateNodeDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  createNodeForbidden:
+    description: CreateNodeForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  createNodeInternalServerError:
+    description: CreateNodeInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  createNodeNotFound:
+    description: CreateNodeNotFound Access definition not found
+    headers:
+      body:
+        description: "In: Body"
+  createNodeUnauthorized:
+    description: CreateNodeUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobBadRequest:
+    description: DeleteArchiveFileJobBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobDefault:
+    description: DeleteArchiveFileJobDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobForbidden:
+    description: DeleteArchiveFileJobForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobInternalServerError:
+    description: DeleteArchiveFileJobInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobMultiStatus:
+    description: DeleteArchiveFileJobMultiStatus Multiple Status
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobOK:
+    description: DeleteArchiveFileJobOK Job deleted
+    headers:
+      body:
+        description: "In: Body"
+  deleteArchiveFileJobUnauthorized:
+    description: DeleteArchiveFileJobUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileBadRequest:
+    description: DeleteConnectionProfileBadRequest Bad Request
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileDefault:
+    description: DeleteConnectionProfileDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  deleteConnectionProfileForbidden:
+    description: DeleteConnectionProfileForbidden Removal of this connection profile is not allowed
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileInternalServerError:
+    description: DeleteConnectionProfileInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileNotFound:
+    description: DeleteConnectionProfileNotFound The connection profile does not exist
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileOK:
+    description: DeleteConnectionProfileOK Connection profile delete successfully
+    headers:
+      body:
+        description: "In: Body"
+  deleteConnectionProfileUnauthorized:
+    description: DeleteConnectionProfileUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowBadRequest:
+    description: DeleteFlowBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowDefault:
+    description: DeleteFlowDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  deleteFlowForbidden:
+    description: DeleteFlowForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowInternalServerError:
+    description: DeleteFlowInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowMultiStatus:
+    description: DeleteFlowMultiStatus Multiple Status
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowOK:
+    description: DeleteFlowOK Flow deleted
+    headers:
+      body:
+        description: "In: Body"
+  deleteFlowUnauthorized:
+    description: DeleteFlowUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsBadRequest:
+    description: DeleteJobsBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsDefault:
+    description: DeleteJobsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  deleteJobsForbidden:
+    description: DeleteJobsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsInternalServerError:
+    description: DeleteJobsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsMultiStatus:
+    description: DeleteJobsMultiStatus Multiple Status
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsOK:
+    description: DeleteJobsOK Job deleted
+    headers:
+      body:
+        description: "In: Body"
+  deleteJobsUnauthorized:
+    description: DeleteJobsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeBadRequest:
+    description: DeleteNodeBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeConflict:
+    description: DeleteNodeConflict Conflict
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeDefault:
+    description: DeleteNodeDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  deleteNodeForbidden:
+    description: DeleteNodeForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeInternalServerError:
+    description: DeleteNodeInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeNotFound:
+    description: DeleteNodeNotFound Node not found
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeOK:
+    description: DeleteNodeOK Node deleted successfully
+    headers:
+      body:
+        description: "In: Body"
+  deleteNodeUnauthorized:
+    description: DeleteNodeUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesBadRequest:
+    description: GetAllConnectionProfilesBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesDefault:
+    description: GetAllConnectionProfilesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesForbidden:
+    description: GetAllConnectionProfilesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesInternalServerError:
+    description: GetAllConnectionProfilesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesOK:
+    description: GetAllConnectionProfilesOK The basic properties of all connection profiles
+    headers:
+      body:
+        description: "In: Body"
+  getAllConnectionProfilesUnauthorized:
+    description: GetAllConnectionProfilesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveFileJobBadRequest:
+    description: GetArchiveFileJobBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveFileJobDefault:
+    description: GetArchiveFileJobDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getArchiveFileJobForbidden:
+    description: GetArchiveFileJobForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveFileJobInternalServerError:
+    description: GetArchiveFileJobInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveFileJobOK:
+    description: GetArchiveFileJobOK Archive files retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveFileJobUnauthorized:
+    description: GetArchiveFileJobUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasBadRequest:
+    description: GetArchiveSchemasBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasDefault:
+    description: GetArchiveSchemasDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getArchiveSchemasForbidden:
+    description: GetArchiveSchemasForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasInternalServerError:
+    description: GetArchiveSchemasInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasNotFound:
+    description: GetArchiveSchemasNotFound Archive flow not found
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasOK:
+    description: GetArchiveSchemasOK Archive files retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveSchemasUnauthorized:
+    description: GetArchiveSchemasUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataBadRequest:
+    description: GetArchiveTableDataBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataDefault:
+    description: GetArchiveTableDataDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getArchiveTableDataForbidden:
+    description: GetArchiveTableDataForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataInternalServerError:
+    description: GetArchiveTableDataInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataNotFound:
+    description: GetArchiveTableDataNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataOK:
+    description: GetArchiveTableDataOK Table information
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDataUnauthorized:
+    description: GetArchiveTableDataUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsBadRequest:
+    description: GetArchiveTableDetailsBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsDefault:
+    description: GetArchiveTableDetailsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsForbidden:
+    description: GetArchiveTableDetailsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsInternalServerError:
+    description: GetArchiveTableDetailsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsNotFound:
+    description: GetArchiveTableDetailsNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsOK:
+    description: GetArchiveTableDetailsOK Table information
+    headers:
+      body:
+        description: "In: Body"
+  getArchiveTableDetailsUnauthorized:
+    description: GetArchiveTableDetailsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getAuthUserinfoDefault:
+    description: GetAuthUserinfoDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getAuthUserinfoInternalServerError:
+    description: GetAuthUserinfoInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getAuthUserinfoOK:
+    description: GetAuthUserinfoOK Successfully retrieved user info
+    headers:
+      body:
+        description: "In: Body"
+  getAuthUserinfoUnauthorized:
+    description: GetAuthUserinfoUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getConfigBadRequest:
+    description: GetConfigBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  getConfigDefault:
+    description: GetConfigDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getConfigForbidden:
+    description: GetConfigForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getConfigInternalServerError:
+    description: GetConfigInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getConfigOK:
+    description: GetConfigOK Fetched environment variables
+    headers:
+      body:
+        description: "In: Body"
+  getConfigUnauthorized:
+    description: GetConfigUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameBadRequest:
+    description: GetConnectionProfileByNameBadRequest Bad Request
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameForbidden:
+    description: GetConnectionProfileByNameForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameInternalServerError:
+    description: GetConnectionProfileByNameInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameNotFound:
+    description: GetConnectionProfileByNameNotFound Not Found
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameOK:
+    description: GetConnectionProfileByNameOK The basic properties of a connection profile
+    headers:
+      body:
+        description: "In: Body"
+  getConnectionProfileByNameUnauthorized:
+    description: GetConnectionProfileByNameUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getFlowPreviewBadRequest:
+    description: GetFlowPreviewBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getFlowPreviewDefault:
+    description: GetFlowPreviewDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getFlowPreviewForbidden:
+    description: GetFlowPreviewForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getFlowPreviewInternalServerError:
+    description: GetFlowPreviewInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getFlowPreviewOK:
+    description: GetFlowPreviewOK Sample rows retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getFlowPreviewUnauthorized:
+    description: GetFlowPreviewUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getLivezDefault:
+    description: GetLivezDefault Error
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getLivezOK:
+    description: GetLivezOK Success
+    headers:
+      body:
+        description: "In: Body"
+  getMaskedTextBadRequest:
+    description: GetMaskedTextBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getMaskedTextForbidden:
+    description: GetMaskedTextForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getMaskedTextInternalServerError:
+    description: GetMaskedTextInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getMaskedTextOK:
+    description: GetMaskedTextOK Success
+    headers:
+      body:
+        description: "In: Body"
+  getMaskedTextUnauthorized:
+    description: GetMaskedTextUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingCategoriesBadRequest:
+    description: GetMaskingCategoriesBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingCategoriesDefault:
+    description: GetMaskingCategoriesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getMaskingCategoriesForbidden:
+    description: GetMaskingCategoriesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingCategoriesInternalServerError:
+    description: GetMaskingCategoriesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingCategoriesOK:
+    description: GetMaskingCategoriesOK Masking types and formats
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingCategoriesUnauthorized:
+    description: GetMaskingCategoriesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingTypesBadRequest:
+    description: GetMaskingTypesBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingTypesDefault:
+    description: GetMaskingTypesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getMaskingTypesForbidden:
+    description: GetMaskingTypesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingTypesInternalServerError:
+    description: GetMaskingTypesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingTypesOK:
+    description: GetMaskingTypesOK Masking types and formats
+    headers:
+      body:
+        description: "In: Body"
+  getMaskingTypesUnauthorized:
+    description: GetMaskingTypesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getNodeBadRequest:
+    description: GetNodeBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  getNodeConflict:
+    description: GetNodeConflict Conflict
+    headers:
+      body:
+        description: "In: Body"
+  getNodeDefault:
+    description: GetNodeDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getNodeForbidden:
+    description: GetNodeForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getNodeInternalServerError:
+    description: GetNodeInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getNodeNotFound:
+    description: GetNodeNotFound Access definition or Node not found
+    headers:
+      body:
+        description: "In: Body"
+  getNodeOK:
+    description: GetNodeOK Nodes retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getNodeUnauthorized:
+    description: GetNodeUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getReadyzDefault:
+    description: GetReadyzDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getReadyzForbidden:
+    description: GetReadyzForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getReadyzInternalServerError:
+    description: GetReadyzInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getReadyzOK:
+    description: GetReadyzOK Success
+    headers:
+      body:
+        description: "In: Body"
+  getReadyzUnauthorized:
+    description: GetReadyzUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getRowPreviewBadRequest:
+    description: GetRowPreviewBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getRowPreviewDefault:
+    description: GetRowPreviewDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getRowPreviewForbidden:
+    description: GetRowPreviewForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getRowPreviewInternalServerError:
+    description: GetRowPreviewInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getRowPreviewOK:
+    description: GetRowPreviewOK Sample rows retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getRowPreviewUnauthorized:
+    description: GetRowPreviewUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowBadRequest:
+    description: GetSavedFlowBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowDefault:
+    description: GetSavedFlowDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getSavedFlowForbidden:
+    description: GetSavedFlowForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowInternalServerError:
+    description: GetSavedFlowInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowNotFound:
+    description: GetSavedFlowNotFound The job does not exist
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowOK:
+    description: GetSavedFlowOK Flow retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getSavedFlowUnauthorized:
+    description: GetSavedFlowUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsBadRequest:
+    description: GetSavedJobDetailsBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsDefault:
+    description: GetSavedJobDetailsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getSavedJobDetailsForbidden:
+    description: GetSavedJobDetailsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsInternalServerError:
+    description: GetSavedJobDetailsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsNotFound:
+    description: GetSavedJobDetailsNotFound The job does not exist
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsOK:
+    description: GetSavedJobDetailsOK Job details retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  getSavedJobDetailsUnauthorized:
+    description: GetSavedJobDetailsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaBadRequest:
+    description: GetSchemaBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaDefault:
+    description: GetSchemaDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getSchemaForbidden:
+    description: GetSchemaForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaInternalServerError:
+    description: GetSchemaInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaNotFound:
+    description: GetSchemaNotFound Schema not found
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaOK:
+    description: GetSchemaOK Schema information
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableBadRequest:
+    description: GetSchemaTableBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableDefault:
+    description: GetSchemaTableDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getSchemaTableForbidden:
+    description: GetSchemaTableForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableInternalServerError:
+    description: GetSchemaTableInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableNotFound:
+    description: GetSchemaTableNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableOK:
+    description: GetSchemaTableOK Table information
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaTableUnauthorized:
+    description: GetSchemaTableUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSchemaUnauthorized:
+    description: GetSchemaUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusBadRequest:
+    description: GetSparkRunStatusBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusDefault:
+    description: GetSparkRunStatusDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getSparkRunStatusForbidden:
+    description: GetSparkRunStatusForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusInternalServerError:
+    description: GetSparkRunStatusInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusNotFound:
+    description: GetSparkRunStatusNotFound The job does not exist
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusOK:
+    description: GetSparkRunStatusOK List of Spark run statuses
+    headers:
+      body:
+        description: "In: Body"
+  getSparkRunStatusUnauthorized:
+    description: GetSparkRunStatusUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getSparkStatusBadRequest:
+    description: GetSparkStatusBadRequest Bad Request
+    headers:
+      body:
+        description: "In: Body"
+  getSparkStatusForbidden:
+    description: GetSparkStatusForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getSparkStatusInternalServerError:
+    description: GetSparkStatusInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getSparkStatusOK:
+    description: GetSparkStatusOK Successfully fetched run
+    headers:
+      body:
+        description: "In: Body"
+  getSparkStatusUnauthorized:
+    description: GetSparkStatusUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataBadRequest:
+    description: GetTableDataBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataDefault:
+    description: GetTableDataDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getTableDataForbidden:
+    description: GetTableDataForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataInternalServerError:
+    description: GetTableDataInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataNotFound:
+    description: GetTableDataNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataOK:
+    description: GetTableDataOK Returned result was successful
+    headers:
+      body:
+        description: "In: Body"
+  getTableDataUnauthorized:
+    description: GetTableDataUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesBadRequest:
+    description: GetTableDependenciesBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesDefault:
+    description: GetTableDependenciesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getTableDependenciesForbidden:
+    description: GetTableDependenciesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesInternalServerError:
+    description: GetTableDependenciesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesNotFound:
+    description: GetTableDependenciesNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesOK:
+    description: GetTableDependenciesOK Table dependencies info
+    headers:
+      body:
+        description: "In: Body"
+  getTableDependenciesUnauthorized:
+    description: GetTableDependenciesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyBadRequest:
+    description: GetTablePrimaryKeyBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyDefault:
+    description: GetTablePrimaryKeyDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyForbidden:
+    description: GetTablePrimaryKeyForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyInternalServerError:
+    description: GetTablePrimaryKeyInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyNotFound:
+    description: GetTablePrimaryKeyNotFound Table not found
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyOK:
+    description: GetTablePrimaryKeyOK Table primary key info
+    headers:
+      body:
+        description: "In: Body"
+  getTablePrimaryKeyUnauthorized:
+    description: GetTablePrimaryKeyUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  killSubmissionBadRequest:
+    description: KillSubmissionBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  killSubmissionDefault:
+    description: KillSubmissionDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  killSubmissionForbidden:
+    description: KillSubmissionForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  killSubmissionInternalServerError:
+    description: KillSubmissionInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  killSubmissionOK:
+    description: KillSubmissionOK Kill request sent.
+    headers:
+      body:
+        description: "In: Body"
+  killSubmissionUnauthorized:
+    description: KillSubmissionUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listArchiveFlowsBadRequest:
+    description: ListArchiveFlowsBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  listArchiveFlowsDefault:
+    description: ListArchiveFlowsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listArchiveFlowsForbidden:
+    description: ListArchiveFlowsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listArchiveFlowsInternalServerError:
+    description: ListArchiveFlowsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listArchiveFlowsOK:
+    description: ListArchiveFlowsOK Archive files retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  listArchiveFlowsUnauthorized:
+    description: ListArchiveFlowsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listNodesBadRequest:
+    description: ListNodesBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  listNodesByTypeBadRequest:
+    description: ListNodesByTypeBadRequest Bad Request
+    headers:
+      body:
+        description: "In: Body"
+  listNodesByTypeDefault:
+    description: ListNodesByTypeDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listNodesByTypeForbidden:
+    description: ListNodesByTypeForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listNodesByTypeInternalServerError:
+    description: ListNodesByTypeInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listNodesByTypeOK:
+    description: ListNodesByTypeOK Name, ID, Access Definition info, and source connection IDs for all nodes of the specified type
+    headers:
+      body:
+        description: "In: Body"
+  listNodesByTypeUnauthorized:
+    description: ListNodesByTypeUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listNodesDefault:
+    description: ListNodesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listNodesForbidden:
+    description: ListNodesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listNodesInternalServerError:
+    description: ListNodesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listNodesNotFound:
+    description: ListNodesNotFound Access definition not found
+    headers:
+      body:
+        description: "In: Body"
+  listNodesOK:
+    description: ListNodesOK Nodes retrieved successfully
+    headers:
+      body:
+        description: "In: Body"
+  listNodesUnauthorized:
+    description: ListNodesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listSavedFlowsBadRequest:
+    description: ListSavedFlowsBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  listSavedFlowsDefault:
+    description: ListSavedFlowsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listSavedFlowsForbidden:
+    description: ListSavedFlowsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listSavedFlowsInternalServerError:
+    description: ListSavedFlowsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listSavedFlowsOK:
+    description: ListSavedFlowsOK List of saved flows
+    headers:
+      body:
+        description: "In: Body"
+  listSavedFlowsUnauthorized:
+    description: ListSavedFlowsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listSavedJobsBadRequest:
+    description: ListSavedJobsBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  listSavedJobsDefault:
+    description: ListSavedJobsDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listSavedJobsForbidden:
+    description: ListSavedJobsForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listSavedJobsInternalServerError:
+    description: ListSavedJobsInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listSavedJobsOK:
+    description: ListSavedJobsOK List of saved jobs
+    headers:
+      body:
+        description: "In: Body"
+  listSavedJobsUnauthorized:
+    description: ListSavedJobsUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesBadRequest:
+    description: ListSchemaTablesBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesDefault:
+    description: ListSchemaTablesDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listSchemaTablesForbidden:
+    description: ListSchemaTablesForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesInternalServerError:
+    description: ListSchemaTablesInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesNotFound:
+    description: ListSchemaTablesNotFound Database or schema not found
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesOK:
+    description: ListSchemaTablesOK List of tables
+    headers:
+      body:
+        description: "In: Body"
+  listSchemaTablesUnauthorized:
+    description: ListSchemaTablesUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  listSchemasBadRequest:
+    description: ListSchemasBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  listSchemasDefault:
+    description: ListSchemasDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  listSchemasForbidden:
+    description: ListSchemasForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  listSchemasInternalServerError:
+    description: ListSchemasInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  listSchemasOK:
+    description: ListSchemasOK list of schemas
+    headers:
+      body:
+        description: "In: Body"
+  listSchemasUnauthorized:
+    description: ListSchemasUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  submitFlowAccepted:
+    description: SubmitFlowAccepted Flow accepted by Spark
+    headers:
+      body:
+        description: "In: Body"
+  submitFlowBadRequest:
+    description: SubmitFlowBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  submitFlowDefault:
+    description: SubmitFlowDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  submitFlowForbidden:
+    description: SubmitFlowForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  submitFlowInternalServerError:
+    description: SubmitFlowInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  submitFlowUnauthorized:
+    description: SubmitFlowUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  testConnectionBadRequest:
+    description: TestConnectionBadRequest Bad request. Input validation failed (e.g. missing host, invalid type).
+    headers:
+      body:
+        description: "In: Body"
+  testConnectionDefault:
+    description: TestConnectionDefault Error payload in case of unhandled errors.
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  testConnectionForbidden:
+    description: TestConnectionForbidden Forbidden. User does not have permission to access this connection profile.
+    headers:
+      body:
+        description: "In: Body"
+  testConnectionInternalServerError:
+    description: TestConnectionInternalServerError Internal Server Error. An unexpected error occurred while testing the connection.
+    headers:
+      body:
+        description: "In: Body"
+  testConnectionOK:
+    description: TestConnectionOK Successful connection. Database is reachable with the given profile.
+    headers:
+      body:
+        description: "In: Body"
+  testConnectionUnauthorized:
+    description: TestConnectionUnauthorized Unauthorized. The Authorization header is missing or invalid.
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileBadRequest:
+    description: UpdateConnectionProfileBadRequest Bad request
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileDefault:
+    description: UpdateConnectionProfileDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  updateConnectionProfileForbidden:
+    description: UpdateConnectionProfileForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileInternalServerError:
+    description: UpdateConnectionProfileInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileNotFound:
+    description: UpdateConnectionProfileNotFound The connection profile does not exist
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileOK:
+    description: UpdateConnectionProfileOK Update the specific connection profile successfully
+    headers:
+      body:
+        description: "In: Body"
+  updateConnectionProfileUnauthorized:
+    description: UpdateConnectionProfileUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowBadRequest:
+    description: UpdateFlowBadRequest Invalid parameters
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowDefault:
+    description: UpdateFlowDefault Error payload
+    headers:
+      _statusCode:
+        format: int64
+        type: integer
+      body:
+        description: "In: Body"
+  updateFlowForbidden:
+    description: UpdateFlowForbidden Forbidden
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowInternalServerError:
+    description: UpdateFlowInternalServerError Internal Server Error
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowNotFound:
+    description: UpdateFlowNotFound Flow name/id not found
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowOK:
+    description: UpdateFlowOK Flow updated
+    headers:
+      body:
+        description: "In: Body"
+  updateFlowUnauthorized:
+    description: UpdateFlowUnauthorized Unauthorized
+    headers:
+      body:
+        description: "In: Body"
+swagger: "2.0"
