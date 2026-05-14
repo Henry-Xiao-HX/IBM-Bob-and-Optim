@@ -1,0 +1,66 @@
+#!/bin/bash
+# Pre-commit hook to run tests when TDM/mock_app/app.py is modified
+# This ensures code quality before committing changes
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Check if TDM/mock_app/app.py is being committed
+if git diff --cached --name-only | grep -q "TDM/mock_app/app.py"; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}  PRE-COMMIT REVIEW: TDM/mock_app/app.py MODIFIED${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${YELLOW}🔍 Detected changes to TDM/mock_app/app.py${NC}"
+    echo -e "${YELLOW}🧪 Running automated test suite with synthetic data...${NC}"
+    echo ""
+    
+    # Change to the TDM/mock_app directory
+    cd TDM/mock_app || exit 1
+    
+    # Run the test suite
+    python3 test_app.py
+    TEST_EXIT_CODE=$?
+    
+    # Return to root directory
+    cd ../..
+    
+    echo ""
+    if [ $TEST_EXIT_CODE -eq 0 ]; then
+        echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
+        echo -e "${GREEN}✅ ALL TESTS PASSED - COMMIT APPROVED${NC}"
+        echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "${GREEN}Your changes to app.py have been validated with synthetic test data.${NC}"
+        echo -e "${GREEN}Proceeding with commit...${NC}"
+        echo ""
+        exit 0
+    else
+        echo -e "${RED}═══════════════════════════════════════════════════════════════════${NC}"
+        echo -e "${RED}❌ TESTS FAILED - COMMIT BLOCKED${NC}"
+        echo -e "${RED}═══════════════════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "${RED}Your changes to app.py failed the test suite.${NC}"
+        echo -e "${RED}Please fix the issues before committing.${NC}"
+        echo ""
+        echo -e "${YELLOW}To fix:${NC}"
+        echo -e "  1. Review the test failures above"
+        echo -e "  2. Fix the issues in TDM/mock_app/app.py"
+        echo -e "  3. Run tests manually: ${BLUE}cd TDM/mock_app && python3 test_app.py${NC}"
+        echo -e "  4. Try committing again once tests pass"
+        echo ""
+        echo -e "${YELLOW}To bypass this check (NOT RECOMMENDED):${NC}"
+        echo -e "  git commit --no-verify"
+        echo ""
+        exit 1
+    fi
+else
+    # app.py not modified, allow commit
+    exit 0
+fi
+
+# Made with Bob

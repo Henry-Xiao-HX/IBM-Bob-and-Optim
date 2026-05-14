@@ -18,7 +18,24 @@ The application demonstrates how to:
 
 ## Setup
 
-### 1. Configure Optim API Credentials
+### 1. Install the Pre-Commit Hook (First Time Setup)
+
+After cloning this repository, run the setup script to install the pre-commit hook:
+
+```bash
+cd TDM/mock_app
+./setup_git_hook.sh
+```
+
+This will:
+- Copy the pre-commit hook to `.git/hooks/`
+- Make it executable
+- Create a symbolic link to activate it
+- Verify the installation
+
+**Note**: This step is required for each developer who clones the repository, as Git hooks are not pushed to GitHub for security reasons.
+
+### 2. Configure Optim API Credentials
 
 Create a `.env` file in the project root with your Optim credentials:
 
@@ -29,7 +46,7 @@ OPTIM_PASSWORD=your_password
 OPTIM_ACCOUNT_ID=your_account_id  # Optional
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 
 ```bash
 pip install -r ../../requirements.txt
@@ -77,6 +94,8 @@ python3 test_app.py
 
 This project includes an **automated pre-commit hook** that runs tests whenever you commit changes to [`app.py`](app.py:1).
 
+**Important**: The hook must be installed locally using [`setup_git_hook.sh`](setup_git_hook.sh:1) after cloning the repository.
+
 #### How It Works
 
 1. **Automatic Detection**: When you commit changes to [`app.py`](app.py:1), the Git hook automatically triggers
@@ -84,12 +103,28 @@ This project includes an **automated pre-commit hook** that runs tests whenever 
 3. **Validation**: All 8 tests must pass before the commit is allowed
 4. **Feedback**: Provides clear success/failure messages with colored output
 
-#### Setup (Already Configured)
+#### Setup Instructions
 
-The pre-commit hook is already set up in this repository:
-- **Hook Script**: [`.git/hooks/pre_commit_test_app_tdm`](../../.git/hooks/pre_commit_test_app_tdm:1)
-- **Active Link**: [`.git/hooks/pre-commit`](../../.git/hooks/pre-commit:1) → `pre_commit_test_app_tdm`
-- **Helper Script**: [`run_tests.sh`](run_tests.sh:1) for manual testing
+**For new developers cloning the repository:**
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd <repository-name>
+
+# 2. Install the pre-commit hook
+cd TDM/mock_app
+./setup_git_hook.sh
+
+# 3. Verify installation
+ls -la ../../.git/hooks/pre-commit
+# Should show: pre-commit -> pre_commit_test_app_tdm
+```
+
+**Files involved:**
+- **Hook Source**: [`TDM/mock_app/git-hooks/pre_commit_test_app_tdm`](git-hooks/pre_commit_test_app_tdm:1) (tracked in Git)
+- **Setup Script**: [`setup_git_hook.sh`](setup_git_hook.sh:1) (installs the hook)
+- **Helper Script**: [`run_tests.sh`](run_tests.sh:1) (manual testing)
 
 #### Workflow Example
 
@@ -162,6 +197,12 @@ git commit --no-verify -m "Emergency fix"
 
 #### Hook Management
 
+**Reinstall the hook (if needed):**
+```bash
+cd TDM/mock_app
+./setup_git_hook.sh
+```
+
 **Disable the hook temporarily:**
 ```bash
 rm .git/hooks/pre-commit
@@ -169,14 +210,29 @@ rm .git/hooks/pre-commit
 
 **Re-enable the hook:**
 ```bash
-cd .git/hooks
-ln -sf pre_commit_test_app_tdm pre-commit
+cd TDM/mock_app
+./setup_git_hook.sh
 ```
 
 **Modify the hook:**
 ```bash
-vim .git/hooks/pre_commit_test_app_tdm
-# Changes take effect immediately
+# Edit the source file (tracked in Git)
+vim TDM/mock_app/git-hooks/pre_commit_test_app_tdm
+
+# Reinstall to apply changes
+cd TDM/mock_app
+./setup_git_hook.sh
+```
+
+**Share hook updates with team:**
+```bash
+# After modifying the hook, commit and push
+git add TDM/mock_app/git-hooks/pre_commit_test_app_tdm
+git commit -m "Update pre-commit hook"
+git push
+
+# Team members run setup script to get updates
+./setup_git_hook.sh
 ```
 
 ## TDM Workflow
