@@ -58,7 +58,7 @@ if [ -x "$HOOK_TARGET" ] && [ -L "$HOOK_LINK" ]; then
     echo "═══════════════════════════════════════════════════════════════════"
     echo ""
     echo "The pre-commit hook is now active. When you commit changes to"
-    echo "TDM/mock_app/app.py, tests will run automatically."
+    echo "TDM/mock_app/credit_risk_queries.sql, tests will run automatically."
     echo ""
     echo "Test the hook manually:"
     echo "  cd TDM/mock_app && ./run_tests.sh"

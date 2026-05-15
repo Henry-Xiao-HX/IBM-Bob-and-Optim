@@ -1,5 +1,5 @@
 #!/bin/bash
-# Helper script to manually run tests for TDM/mock_app/app.py
+# Helper script to manually run SQL tests for TDM/mock_app/credit_risk_queries.sql
 # This script can be run independently or is automatically triggered by git pre-commit hook
 
 # Colors for output
@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  CREDIT RISK APPLICATION TEST SUITE${NC}"
+echo -e "${BLUE}  SQL QUERY TEST SUITE${NC}"
 echo -e "${BLUE}  Testing with Synthetic Data from Optim Archive${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════════${NC}"
 echo ""
@@ -19,8 +19,8 @@ echo ""
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR" || exit 1
 
-# Run the test suite
-python3 test_app.py
+# Run the SQL test suite
+python3 test_sql.py
 TEST_EXIT_CODE=$?
 
 echo ""
