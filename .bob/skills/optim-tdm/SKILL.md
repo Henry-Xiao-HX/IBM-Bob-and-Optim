@@ -14,7 +14,7 @@ This skill activates when users mention:
 - "pre-commit" or "before commit"
 - "validate changes"
 
-**When user types just "review"**: Immediately run the test suite at `TDM/mock_app/test_app.py` without asking questions.
+**When user types just "review"**: Immediately run the test suite at `TDM/mock_app/test_sql.py` without asking questions.
 
 ## Your Role
 
@@ -73,47 +73,62 @@ available_data = [f for f in test_data_files if Path(f).exists()]
 - "I'll connect to Optim Archive and create synthetic test data"
 - Execute: `python3 TDM/synthetic_testdata_demo.py`
 
-### Step 3: Run the Application
+### Step 3: Run SQL Query Tests
 
 Guide the user:
 ```
-"Let's run your application with the test data to see if it works."
+"Now let's validate your SQL queries with test data to catch breaking changes."
 ```
 
-Execute the appropriate command:
-- For Python apps: `python3 TDM/mock_app/app.py`
-- For Node apps: `npm start` or `node app.js`
-- For other apps: Ask user for the command
+**Why SQL Testing Matters:**
+SQL tests catch 8 common breaking changes BEFORE they reach production:
+1. **Wrong column names** - Typos like `loan_amout` instead of `loan_amount`
+2. **Division by zero** - Missing NULL/empty result set handling
+3. **Wrong data types** - String comparisons instead of integer
+4. **NULL value issues** - Missing COALESCE or NULL handling
+5. **Incorrect aggregations** - Wrong percentage or average calculations
+6. **Wrong CASE logic** - Boundary conditions and ordering errors
+7. **Missing columns** - Output structure doesn't match expectations
+8. **Wrong filter values** - Using 'High Risk' when data contains 'Risk'
 
-**Interpret results:**
-- ✅ If successful: "Your application runs successfully with test data!"
-- ❌ If errors: "I see some errors. Let me help you fix them."
-
-### Step 4: Run Automated Tests
+### Step 4: Run Automated SQL Tests
 
 Guide the user:
 ```
 "Now let's run automated tests to validate your changes thoroughly."
 ```
 
-Execute tests:
+Execute SQL tests:
 ```bash
-python3 TDM/mock_app/test_app.py
+python3 TDM/mock_app/test_sql.py
 ```
+
+**What the tests validate:**
+- ✅ All column names are spelled correctly
+- ✅ Division by zero is handled with COALESCE
+- ✅ Data types match (integers vs strings)
+- ✅ NULL values are handled properly
+- ✅ Aggregation calculations are accurate
+- ✅ CASE statement logic is correct
+- ✅ Query output structure is complete
+- ✅ Filter values match actual data
 
 **Interpret test results:**
 
 If all tests pass:
 ```
-✅ Excellent! All tests passed.
+✅ Excellent! All SQL tests passed.
 
-Your changes have been validated:
-• [X] tests passed
-• Application logic works correctly
-• Data integrity maintained
-• Privacy compliance verified
+Your queries have been validated with test data:
+• [X] SQL tests passed
+• Column names verified
+• Division by zero handled
+• Data types correct
+• NULL values handled
+• Aggregations accurate
+• Logic errors caught
 
-You're safe to commit your changes!
+You're safe to commit your SQL changes!
 
 Would you like me to:
 1. Help you create a commit message?
@@ -145,10 +160,11 @@ Would you like me to:
 🎉 Your code is ready to commit!
 
 Here's what I validated:
-• ✅ Application functionality
-• ✅ Business logic correctness
-• ✅ Data handling
-• ✅ Privacy compliance
+• ✅ SQL query syntax and structure
+• ✅ Column names and data types
+• ✅ NULL and edge case handling
+• ✅ Aggregation calculations
+• ✅ Filter logic with actual data
 
 Next steps:
 1. Review your changes: `git diff`
@@ -181,7 +197,7 @@ What would you like to do?
 ```
 🧪 Running pre-commit test suite...
 
-[Execute: python3 TDM/mock_app/test_app.py]
+[Execute: python3 TDM/mock_app/test_sql.py]
 
 [Wait for results and interpret them]
 ```
@@ -223,42 +239,55 @@ Starting generation...
 
 Execute: `python3 TDM/synthetic_testdata_demo.py`
 
-### "Test my changes before I commit"
+### "Test my SQL queries before I commit"
 
 Response:
 ```
-Great practice! Let me help you test your changes.
+Great practice! Let me validate your SQL queries with test data.
 
-I'll:
-1. Check if you have test data (or generate it)
-2. Run your application with test data
-3. Execute automated tests
-4. Tell you if it's safe to commit
+I'll catch these common breaking changes:
+• Column name typos (loan_amout vs loan_amount)
+• Division by zero errors
+• Wrong data types (string vs integer)
+• NULL value issues
+• Incorrect aggregations
+• Wrong CASE statement logic
+• Missing output columns
+• Wrong filter values
 
-Let's start...
+Running SQL tests...
 ```
 
-Then follow the workflow above.
+Execute: `python3 TDM/mock_app/test_sql.py`
 
-### "My tests are failing"
+### "My SQL tests are failing"
 
 Response:
 ```
-Let me analyze the test failures for you.
+Let me analyze the SQL test failures for you.
 
 [Read test output]
-[Identify specific failures]
-[Explain what's wrong]
+[Identify which of the 8 breaking changes was caught]
 
-The issue is: [clear explanation]
+The issue is: [clear explanation with examples]
 
-Here's how to fix it:
+Common fixes:
+• Column name typo: Check spelling in SELECT/WHERE clauses
+• Division by zero: Add COALESCE(COUNT(*), 1) or NULLIF
+• Data type: Remove quotes from integer comparisons
+• NULL handling: Use COALESCE or IS NOT NULL
+• Aggregation: Verify calculation logic matches expected formula
+• CASE logic: Check boundary conditions and ordering
+• Missing columns: Add required columns to SELECT
+• Filter values: Check actual data values in test dataset
+
+Here's how to fix your specific issue:
 [Step-by-step guidance]
 
 Would you like me to:
-1. Show you the correct code?
+1. Show you the corrected SQL?
 2. Explain the logic in detail?
-3. Help you refactor?
+3. Help you refactor the query?
 ```
 
 ### "How do I integrate this into CI/CD?"
@@ -396,69 +425,83 @@ Use `ask_followup_question` when you need:
 
 ## Example Interactions
 
-### Example 1: Complete Workflow
+### Example 1: SQL Query Testing Workflow
 
-**User:** "I made changes to my risk assessment logic and want to test before committing"
-
-**You:**
-```
-Perfect! Let me help you test those changes safely.
-
-I'll guide you through:
-1. Checking for test data
-2. Running your application
-3. Executing automated tests
-4. Validating your changes
-
-Let's start by checking if you have test data...
-```
-
-[Check for test data]
-[Execute application]
-[Run tests]
-[Provide results and guidance]
-
-### Example 2: Troubleshooting
-
-**User:** "My tests are failing and I don't know why"
+**User:** "I wrote new SQL queries for risk analysis and want to test before committing"
 
 **You:**
 ```
-Let me analyze the test failures for you.
+Perfect! Let me validate your SQL queries with test data.
+
+I'll catch these breaking changes:
+1. Column name typos
+2. Division by zero errors
+3. Wrong data types
+4. NULL handling issues
+5. Incorrect aggregations
+6. Wrong CASE logic
+7. Missing columns
+8. Wrong filter values
+
+Running SQL tests...
+```
+
+[Execute: python3 TDM/mock_app/test_sql.py]
+[Analyze results]
+[Provide specific feedback on any failures]
+
+### Example 2: SQL Test Failure Analysis
+
+**User:** "My SQL tests are failing and I don't know why"
+
+**You:**
+```
+Let me analyze the SQL test failures for you.
 
 [Read test output]
 
-I see the issue. Your new risk assessment logic is failing because:
-[Explain the specific problem]
+I see the issue. Test #3 failed: "Column name typo detected"
 
-Here's what's happening:
-[Detailed explanation]
+Your query has: SELECT loan_amout FROM credit_applications
+Should be: SELECT loan_amount FROM credit_applications
 
-To fix it, you need to:
-[Step-by-step solution]
+This is exactly why we test with real data - the typo would cause
+a runtime error in production!
 
-Would you like me to show you the corrected code?
+Here's the fix:
+[Show corrected SQL with proper column name]
+
+Would you like me to:
+1. Fix the SQL file for you?
+2. Show you all column names in the schema?
+3. Run the tests again after you fix it?
 ```
 
-### Example 3: First-Time User
+### Example 3: First-Time SQL Testing
 
-**User:** "How do I test my code with synthetic data?"
+**User:** "How do I test my SQL queries with synthetic data?"
 
 **You:**
 ```
-Great question! I'll walk you through it step by step.
-
-First, let me check your setup...
-[Check for necessary files]
+Great question! I'll show you how SQL testing catches breaking changes.
 
 Here's what we'll do:
-1. Generate synthetic test data from Optim (2 minutes)
-2. Run your application with that data
-3. Execute automated tests
-4. Review results together
+1. Check if you have test data (credit_risk_mock_data.csv)
+2. Run SQL tests that validate 8 common breaking changes
+3. Review results and fix any issues
+4. Confirm your queries are safe to commit
 
-Ready to start? I'll handle the technical details - you just follow along!
+The tests will catch:
+• Column name typos (before they cause runtime errors)
+• Division by zero (before it crashes production)
+• Wrong data types (before database errors)
+• NULL issues (before unexpected results)
+• And 4 more common SQL mistakes!
+
+Ready to start? Running tests...
 ```
+
+[Execute: python3 TDM/mock_app/test_sql.py]
 
 ## Remember
 
