@@ -8,11 +8,74 @@ Generate privacy-compliant, production-like test data directly in your IDE using
 
 ## Overview
 
-This [`TDM`](README.md) area provides:
-- a high-level IBM Optim TDM workflow for synthetic test data
-- guidance for masking and privacy-safe development
-- CI/CD integration patterns
-- a runnable mock application under [`TDM/mock_app`](mock_app/README.md)
+This [`TDM`](README.md) area demonstrates how Test Data Management integrates into the Software Development Lifecycle (SDLC) with IBM BOB as your AI development assistant:
+
+1. **Bob helps developers write code** - AI-assisted development in VS Code
+2. **Developers test with production-like data** - TDM provides privacy-safe synthetic data
+3. **Bob uses Git hooks to validate changes** - Automated pre-commit testing with TDM data
+
+### What's in this folder
+
+- **[`TDM/mock_app/`](mock_app/README.md)** - Complete credit risk assessment demo showing the full SDLC workflow
+  - [`credit_risk_queries.sql`](mock_app/credit_risk_queries.sql) - SQL queries validated with synthetic data
+  - [`test_sql.py`](mock_app/test_sql.py) - Automated SQL validation tests
+  - [`credit_risk_mock_data.csv`](mock_app/credit_risk_mock_data.csv) - Fallback dataset for offline development
+  - [`git-hooks/pre_commit_test_app_tdm`](mock_app/git-hooks/pre_commit_test_app_tdm) - Pre-commit hook that validates SQL changes
+  - [`run_tests.sh`](mock_app/run_tests.sh) & [`setup_git_hook.sh`](mock_app/setup_git_hook.sh) - Workflow automation scripts
+- **[`../docs/optim-tdm-1.1.0_api-docs.yaml`](../docs/optim-tdm-1.1.0_api-docs.yaml)** - Complete Optim TDM API specification
+- **[`../auth_helper.py`](../auth_helper.py)** - Shared authentication helper for all TDM operations
+
+This README covers shared TDM concepts and SDLC integration. See [`TDM/mock_app/README.md`](mock_app/README.md) for the hands-on demo workflow.
+
+---
+
+## How TDM works in the SDLC
+
+### Traditional development workflow (without TDM)
+```text
+Developer writes code → Manual testing → Commit → Deploy → Production issues discovered
+```
+
+### Modern SDLC with TDM and Bob
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Bob helps write code                                         │
+│    • AI-assisted SQL query development                          │
+│    • Code suggestions and refactoring                           │
+│    • Best practices enforcement                                 │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. Developer tests with production-like data                    │
+│    • TDM fetches synthetic data from Optim Archive              │
+│    • Privacy-compliant masking (PII, PHI, PCI)                  │
+│    • Maintains referential integrity and data patterns          │
+│    • Local validation: ./run_tests.sh                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Bob uses Git hooks for automated validation                 │
+│    • Pre-commit hook detects SQL changes                        │
+│    • Runs test suite with synthetic data                        │
+│    • Blocks commit if tests fail                                │
+│    • Provides clear feedback and fix suggestions                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+                    ✅ Confident commit
+                    ✅ Fewer production bugs
+                    ✅ Faster feedback loop
+```
+
+### Real-world example from mock_app
+
+1. **Developer modifies SQL** in [`credit_risk_queries.sql`](mock_app/credit_risk_queries.sql)
+2. **Bob assists** with query optimization and syntax
+3. **Developer runs tests** with `./run_tests.sh` using TDM synthetic data
+4. **Git hook validates** automatically on commit attempt
+5. **Tests catch issues** like typos, NULL handling, or logic errors
+6. **Developer fixes** before code reaches production
+
+**Result**: Issues caught in seconds locally, not hours later in production.
 
 ## Key benefits
 
